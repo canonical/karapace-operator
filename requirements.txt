@@ -1,1 +1,9 @@
-ops ~= 2.5
+cffi==1.16.0 ; python_version >= "3.8" and python_version < "4.0"
+cryptography==39.0.2 ; python_version >= "3.8" and python_version < "4.0"
+ops==2.11.0 ; python_version >= "3.8" and python_version < "4.0"
+pycparser==2.21 ; python_version >= "3.8" and python_version < "4.0"
+pydantic==1.10.14 ; python_version >= "3.8" and python_version < "4.0"
+pyyaml==6.0.1 ; python_version >= "3.8" and python_version < "4.0"
+tenacity==8.2.3 ; python_version >= "3.8" and python_version < "4.0"
+typing-extensions==4.10.0 ; python_version >= "3.8" and python_version < "4.0"
+websocket-client==1.7.0 ; python_version >= "3.8" and python_version < "4.0"

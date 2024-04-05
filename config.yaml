@@ -1,0 +1,14 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+options:
+  username:
+    type: string
+    default: ""
+  karapace_password:
+    description: password for karapace Kafka user.
+    type: string
+    default: ""
+  bootstrap_servers:
+    type: string
+    default: ""

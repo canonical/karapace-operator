@@ -6,6 +6,7 @@ import unittest
 
 import ops
 import ops.testing
+
 from charm import KarapaceCharm
 
 
