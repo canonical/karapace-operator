@@ -63,11 +63,11 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
     def _on_install(self, _: ops.InstallEvent):
         """Handle install event."""
         self.workload.install()
-        if not self.context.cluster.internal_user_credentials:
-            self.auth_manager._create_internal_user()
 
     def _on_start(self, _: ops.StartEvent):
         """Handle start event."""
+        self.auth_manager._create_internal_user()
+
         if not self.config.karapace_password or not self.config.bootstrap_servers:
             self.unit.status = ops.WaitingStatus("Waiting on config")
             return
@@ -75,7 +75,12 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        """Handle config changed event."""
+        """Handle config changed event."""  
+        self._set_status(self.context.ready_to_start)
+        if not isinstance(self.unit.status, ops.ActiveStatus):
+            event.defer()
+            return
+
         if not self.config.karapace_password or not self.config.bootstrap_servers:
             self.unit.status = ops.WaitingStatus("Waiting on config")
             return
@@ -90,7 +95,10 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         self.workload.write(content=json_str, path=self.workload.paths.karapace_config)
 
-        self.workload.start()
+        if not self.workload.active():
+            self.workload.start()
+        else:
+            self.workload.restart()
 
         self.unit.status = ops.ActiveStatus()
 

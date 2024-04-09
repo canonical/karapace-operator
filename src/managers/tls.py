@@ -11,7 +11,7 @@ from ops.pebble import ExecError
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import GROUP, USER, Substrate
+from literals import Substrate
 
 logger = logging.getLogger(__name__)
 

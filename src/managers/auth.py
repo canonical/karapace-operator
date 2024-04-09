@@ -78,7 +78,7 @@ class KarapaceAuth:
             current_auth = [current_auth.remove(u) for u in current_auth if u["username"] == username]
         current_auth.append(user_credentials)
 
-        self._write_authfile(values=new_auth)
+        # self._write_authfile(values=new_auth)
 
     def add_acl(self, alcs: list[Acl]) -> None:
         """Add Acls for a specific user."""

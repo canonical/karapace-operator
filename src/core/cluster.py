@@ -9,7 +9,6 @@ from ops import Framework, Object, Relation, Unit
 from core.models import KarapaceServer, KarapaceCluster, Kafka
 from charms.data_platform_libs.v0.data_interfaces import (
     KafkaRequiresData,
-    DatabaseProviderData,
     DataPeerData,
     DataPeerOtherUnitData,
     DataPeerUnitData,
@@ -143,13 +142,14 @@ class ClusterContext(Object):
         if not self.peer_relation:
             return Status.NO_PEER_RELATION
 
-        if not self.kafka.kafka_related:
-            return Status.KAFKA_NOT_RELATED
+        # TODO: Uncomment after relation is added
+        # if not self.kafka.kafka_related:
+        #     return Status.KAFKA_NOT_RELATED
 
-        if not self.kafka.kafka_ready:
-            return Status.KAFKA_NO_DATA
+        # if not self.kafka.kafka_ready:
+        #     return Status.KAFKA_NO_DATA
 
-        # # TLS must be enabled for Kafka and karapace or disabled for both
+        # TLS must be enabled for Kafka and karapace or disabled for both
         # if self.cluster.tls_enabled ^ self.kafka.tls:
         #     return Status.KAFKA_TLS_MISMATCH
 

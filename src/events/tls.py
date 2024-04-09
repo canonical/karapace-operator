@@ -2,12 +2,10 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Manager for handling Kafka TLS configuration."""
+"""Manager for handling Karapace TLS configuration."""
 
 import base64
-import json
 import logging
-import os
 import re
 import socket
 from typing import TYPE_CHECKING
@@ -15,18 +13,11 @@ from typing import TYPE_CHECKING
 from charms.tls_certificates_interface.v1.tls_certificates import (
     CertificateAvailableEvent,
     TLSCertificatesRequiresV1,
-    _load_relation_data,
     generate_csr,
     generate_private_key,
 )
-from ops.charm import (
-    ActionEvent,
-    RelationBrokenEvent,
-    RelationChangedEvent,
-    RelationJoinedEvent,
-)
+from ops.charm import ActionEvent
 from ops.framework import Object
-from ops.model import ActiveStatus, BlockedStatus
 
 from literals import TLS_RELATION
 

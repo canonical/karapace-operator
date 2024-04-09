@@ -9,10 +9,8 @@ from typing import TYPE_CHECKING
 
 from charms.data_platform_libs.v0.data_interfaces import (
     BootstrapServerChangedEvent,
-    KafkaRequires,
     TopicCreatedEvent,
     KafkaRequiresEventHandlers,
-    KafkaRequiresData,
 )
 from ops import Object, RelationChangedEvent, RelationEvent, RelationBrokenEvent, EventBase
 from ops.pebble import ExecError

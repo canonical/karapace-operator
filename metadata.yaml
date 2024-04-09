@@ -24,6 +24,7 @@ requires:
   kafka-client:
     interface: kafka_client
     limit: 1
+    optional: true  # TODO: Non optional after relation is synced
   certificates:
     interface: tls-certificates
     limit: 1
