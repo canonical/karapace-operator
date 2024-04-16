@@ -61,10 +61,15 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
-    def _on_install(self, event: ops.InstallEvent):
+    def _on_install(self, _: ops.InstallEvent):
         """Handle install event."""
-        self.workload.install()
+        if self.workload.install():
+            self.unit.set_workload_version(self.workload.get_version())
+        else:
+            self._set_status(Status.SNAP_NOT_INSTALLED)
 
+    def _on_start(self, event: ops.StartEvent):
+        """Handle start event."""
         if not self.context.has_peer_relation():
             self.unit.status = ops.WaitingStatus("waiting for peer relation")
             event.defer()
@@ -74,8 +79,6 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             self.context.cluster.update({"config_changed": "added"})
             self.auth_manager._create_internal_user()
 
-    def _on_start(self, _: ops.StartEvent):
-        """Handle start event."""
         if not self.config.karapace_password or not self.config.bootstrap_servers:
             self.unit.status = ops.WaitingStatus("Waiting on config")
             return

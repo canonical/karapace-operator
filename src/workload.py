@@ -6,6 +6,7 @@
 
 import logging
 import os
+import re
 import subprocess
 
 from charms.operator_libs_linux.v0 import apt, systemd
@@ -113,3 +114,13 @@ class KarapaceWorkload(WorkloadBase):
         # self.write(content="", path="/root/authfile.json")
 
         return True
+
+    @override
+    def get_version(self) -> str:
+        if not self.active:
+            return ""
+        try:
+            version = re.split(r"[\s\-]", self.exec(command="karapace --version"))[0]
+        except:  # noqa: E722
+            version = ""
+        return version

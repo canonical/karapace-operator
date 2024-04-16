@@ -13,7 +13,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, StatusBase
 CHARM_KEY = "karapace"
 SNAP_NAME = "charmed-karapace"
 CHARMED_KARAPACE_SNAP_REVISION = 1
-# CONTAINER = "karapace"
+CONTAINER = "karapace"
 PORT = 8081
 
 PEER = "cluster"
@@ -71,7 +71,7 @@ class Status(Enum):
 
     ACTIVE = StatusLevel(ActiveStatus(), "DEBUG")
     NO_PEER_RELATION = StatusLevel(MaintenanceStatus("no peer relation yet"), "DEBUG")
-    # SNAP_NOT_INSTALLED = StatusLevel(BlockedStatus(f"unable to install {SNAP_NAME} snap"), "ERROR")
+    SNAP_NOT_INSTALLED = StatusLevel(BlockedStatus(f"unable to install {SNAP_NAME} snap"), "ERROR")
     SERVICE_NOT_RUNNING = StatusLevel(BlockedStatus("karapace service not running"), "ERROR")
     KAFKA_NOT_RELATED = StatusLevel(BlockedStatus("missing required kafka relation"), "DEBUG")
     KAFKA_NOT_CONNECTED = StatusLevel(BlockedStatus("unit not connected to kafka"), "ERROR")

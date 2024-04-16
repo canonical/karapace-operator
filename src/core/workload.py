@@ -107,6 +107,15 @@ class WorkloadBase(ABC):
         """Checks that the workload is active."""
         ...
 
+    @abstractmethod
+    def get_version(self) -> str:
+        """Get the workload version.
+
+        Returns:
+            String of Karapace version
+        """
+        ...
+
     @staticmethod
     def generate_password() -> str:
         """Creates randomized string for use as app passwords.
