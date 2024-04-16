@@ -11,7 +11,7 @@ from pytest_operator.plugin import OpsTest
 
 from literals import PORT
 
-from .helpers import (
+from helpers import (
     APP_NAME,
     DATA_INTEGRATOR,
     KAFKA,
@@ -42,15 +42,15 @@ async def test_build_and_deploy(ops_test: OpsTest, karapace_charm):
 async def test_integrate_kafka(ops_test: OpsTest):
     """Integrate charm with Kafka."""
     data_integrator_config = {
-        "topic": "_schemas",
+        "topic-name": "_schemas",
         "extra-user-roles": "admin",
         "consumer-group-prefix": "schema-registry",
     }
     await asyncio.gather(
         ops_test.model.deploy(
-            ZOOKEEPER, channel="edge", application_name=ZOOKEEPER, series="jammy"
+            ZOOKEEPER, channel="3/edge", application_name=ZOOKEEPER, series="jammy"
         ),
-        ops_test.model.deploy(KAFKA, channel="edge", application_name=KAFKA, series="jammy"),
+        ops_test.model.deploy(KAFKA, channel="3/edge", application_name=KAFKA, series="jammy"),
         ops_test.model.deploy(
             DATA_INTEGRATOR,
             channel="edge",

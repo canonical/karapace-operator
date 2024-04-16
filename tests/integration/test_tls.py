@@ -8,7 +8,7 @@ import logging
 import pytest
 from pytest_operator.plugin import OpsTest
 
-from .helpers import APP_NAME, DATA_INTEGRATOR, KAFKA, ZOOKEEPER
+from helpers import APP_NAME, DATA_INTEGRATOR, KAFKA, ZOOKEEPER
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ CERTS_NAME = "tls-certificates-operator"
 async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
     tls_config = {"ca-common-name": "kafka"}
     data_integrator_config = {
-        "topic": "_schemas",
+        "topic-name": "_schemas",
         "extra-user-roles": "admin",
         "consumer-group-prefix": "schema-registry",
     }
@@ -30,9 +30,9 @@ async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
         ops_test.model.deploy(karapace_charm, application_name=APP_NAME, series="jammy"),
         ops_test.model.deploy(TLS_NAME, channel="edge", config=tls_config, series="jammy"),
         ops_test.model.deploy(
-            ZOOKEEPER, channel="edge", series="jammy", application_name=ZOOKEEPER
+            ZOOKEEPER, channel="3/edge", series="jammy", application_name=ZOOKEEPER
         ),
-        ops_test.model.deploy(KAFKA, channel="edge", series="jammy", application_name=KAFKA),
+        ops_test.model.deploy(KAFKA, channel="3/edge", series="jammy", application_name=KAFKA),
         ops_test.model.deploy(
             DATA_INTEGRATOR,
             channel="edge",
