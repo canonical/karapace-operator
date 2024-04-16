@@ -5,20 +5,20 @@
 """Charm the application."""
 
 import logging
-import json
 
 import ops
-from charms.rolling_ops.v0.rollingops import RollingOpsManager
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
+from charms.rolling_ops.v0.rollingops import RollingOpsManager
 
 from core.cluster import ClusterContext
 from core.structured_config import CharmConfig
 from events.kafka import KafkaHandler
+from events.password_actions import PasswordActionEvents
 from events.tls import TLSHandler
+from literals import CHARM_KEY, DebugLevel, Status, Substrate
 from managers.auth import KarapaceAuth
-from managers.tls import TLSManager
 from managers.config import ConfigManager
-from literals import CHARM_KEY, DebugLevel, Status, Substrate, KARAPACE_CONFIG
+from managers.tls import TLSManager
 from workload import KarapaceWorkload
 
 logger = logging.getLogger(__name__)
@@ -39,6 +39,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         # HANDLERS
 
+        self.password_action_events = PasswordActionEvents(self)
         self.kafka = KafkaHandler(self)
         self.tls = TLSHandler(self)
 
@@ -60,14 +61,21 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
-    def _on_install(self, _: ops.InstallEvent):
+    def _on_install(self, event: ops.InstallEvent):
         """Handle install event."""
         self.workload.install()
 
+        if not self.context.has_peer_relation():
+            self.unit.status = ops.WaitingStatus("waiting for peer relation")
+            event.defer()
+            return
+
+        if self.unit.is_leader() and not self.context.cluster.internal_user_credentials:
+            self.context.cluster.update({"config_changed": "added"})
+            self.auth_manager._create_internal_user()
+
     def _on_start(self, _: ops.StartEvent):
         """Handle start event."""
-        self.auth_manager._create_internal_user()
-
         if not self.config.karapace_password or not self.config.bootstrap_servers:
             self.unit.status = ops.WaitingStatus("Waiting on config")
             return
@@ -75,7 +83,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        """Handle config changed event."""  
+        """Handle config changed event."""
         self._set_status(self.context.ready_to_start)
         if not isinstance(self.unit.status, ops.ActiveStatus):
             event.defer()
@@ -85,15 +93,25 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             self.unit.status = ops.WaitingStatus("Waiting on config")
             return
 
-        properties = KARAPACE_CONFIG
-        properties["bootstrap_uri"] = self.config.bootstrap_servers
-        properties["sasl_bootstrap_uri"] = self.config.bootstrap_servers
-        properties["sasl_plain_username"] = self.config.username
-        properties["sasl_plain_password"] = self.config.karapace_password
+        # Load current properties set in the charm workload
+        rendered_file = self.config_manager.parsed_confile
+        if rendered_file != self.config_manager.config:
+            logger.info(
+                (
+                    f'Server {self.unit.name.split("/")[1]} updating config - '
+                    f"OLD CONFIG = {set(rendered_file.items()) - set(self.config_manager.config.items())}, "
+                    f"NEW CONFIG = {set(self.config_manager.config.items()) - set(rendered_file.items())}"
+                )
+            )
 
-        json_str = json.dumps(properties, indent=2)
+            # FIXME: remove after kafka_client
+            self.config_manager._update_config(
+                uris=self.config.bootstrap_servers,
+                username=self.config.username,
+                password=self.config.karapace_password,
+            )
 
-        self.workload.write(content=json_str, path=self.workload.paths.karapace_config)
+            self.config_manager.generate_config()
 
         if not self.workload.active():
             self.workload.start()
@@ -112,7 +130,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.workload.restart()
 
         if self.workload.active():
-            logger.info(f'{self.unit.name} restarted')
+            logger.info(f"{self.unit.name} restarted")
         else:
             logger.error(f"{self.unit.name} failed to restart")
 

@@ -7,7 +7,12 @@
 import logging
 from collections.abc import MutableMapping
 
-from charms.data_platform_libs.v0.data_interfaces import Data, DataPeerData, KafkaRequiresData, DataPeerUnitData
+from charms.data_platform_libs.v0.data_interfaces import (
+    Data,
+    DataPeerData,
+    DataPeerUnitData,
+    KafkaRequiresData,
+)
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 
@@ -95,19 +100,14 @@ class KarapaceServer(RelationState):
     # -- Cluster Init --
 
     @property
-    def hostname(self) -> str:
-        """The hostname for the unit."""
-        return self.data.get("hostname", "")  # pyright: ignore reportGeneralTypeIssues
-
-    @property
     def fqdn(self) -> str:
         """The Fully Qualified Domain Name for the unit."""
-        return self.data.get("fqdn", "")  # pyright: ignore reportGeneralTypeIssues
+        return self.relation_data.get("fqdn", "")  # pyright: ignore reportGeneralTypeIssues
 
     @property
     def ip(self) -> str:
         """The IP for the unit."""
-        return self.data.get("ip", "")  # pyright: ignore reportGeneralTypeIssues
+        return self.relation_data.get("ip", "")  # pyright: ignore reportGeneralTypeIssues
 
     @property
     def host(self) -> str:
@@ -115,7 +115,7 @@ class KarapaceServer(RelationState):
         host = ""
         if self.substrate == "vm":
             for key in ["hostname", "ip", "private-address"]:
-                if host := self.data.get(key, ""):
+                if host := self.relation_data.get(key, ""):
                     break
 
         if self.substrate == "k8s":
@@ -128,22 +128,22 @@ class KarapaceServer(RelationState):
     @property
     def private_key(self) -> str:
         """The private-key contents for the unit to use for TLS."""
-        return self.data.get("private-key", "")
+        return self.relation_data.get("private-key", "")
 
     @property
     def csr(self) -> str:
         """The current certificate signing request contents for the unit."""
-        return self.data.get("csr", "")
+        return self.relation_data.get("csr", "")
 
     @property
     def certificate(self) -> str:
         """The certificate contents for the unit to use for TLS."""
-        return self.data.get("certificate", "")
+        return self.relation_data.get("certificate", "")
 
     @property
     def ca(self) -> str:
         """The root CA contents for the unit to use for TLS."""
-        return self.data.get("ca-cert", "")
+        return self.relation_data.get("ca-cert", "")
 
 
 class KarapaceCluster(RelationState):
@@ -177,7 +177,7 @@ class KarapaceCluster(RelationState):
 
     @property
     def internal_user_credentials(self) -> dict[str, str]:
-        """The charm internal usernames and passwords, e.g `operator`
+        """The charm internal usernames and passwords, e.g `operator`.
 
         Returns:
             Dict of usernames and passwords
@@ -227,27 +227,27 @@ class Kafka(RelationState):
     @property
     def topic(self) -> str:
         """Get the topic if it has been created."""
-        return self.data.get("topic", "")
+        return self.relation_data.get("topic", "")
 
     @property
     def username(self) -> str:
         """Username to connect to Kafka."""
-        return self.data.get("username", "")
+        return self.relation_data.get("username", "")
 
     @property
     def password(self) -> str:
         """Password of the Kafka user."""
-        return self.data.get("password", "")
+        return self.relation_data.get("password", "")
 
     @property
     def bootstrap_servers(self) -> str:
         """IP/host where Kafka is located."""
-        return self.data.get("endpoints", "")
+        return self.relation_data.get("endpoints", "")
 
     @property
     def tls(self) -> bool:
         """Check if TLS is enabled on Kafka."""
-        return self.data.get("tls", "")
+        return self.relation_data.get("tls", "")
 
     @property
     def kafka_related(self) -> bool:

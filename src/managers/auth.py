@@ -68,14 +68,18 @@ class KarapaceAuth:
 
     def add_user(self, username: str, password: str, replace: bool = False) -> None:
         """Create a user for Karapace."""
-        if username in self.users and replace == False:
+        if username in self.users and not replace:
             return logger.info(f"User {username} already exists, skipping creation")
 
-        user_credentials = json.loads(self.workload.exec(command=f"karapace_mkpasswd -u {username} -a sha512 {password}"))
+        user_credentials = json.loads(
+            self.workload.exec(command=f"karapace_mkpasswd -u {username} -a sha512 {password}")
+        )
 
         current_auth = self.parsed_authfile["users"]
-        if replace == True:
-            current_auth = [current_auth.remove(u) for u in current_auth if u["username"] == username]
+        if replace:
+            current_auth = [
+                current_auth.remove(u) for u in current_auth if u["username"] == username
+            ]
         current_auth.append(user_credentials)
 
         # self._write_authfile(values=new_auth)
@@ -88,16 +92,19 @@ class KarapaceAuth:
         """Remove username and ACLs from authfile."""
         pass
 
-
     def _write_authfile(self, values: dict):
-        """Add users or ACLs to authfile.json"""
+        """Add users or ACLs to authfile.json."""
         json_str = json.dumps(values, indent=2)
         self.workload.write(content=json_str, path=self.workload.paths.registry_authfile)
 
     def _create_internal_user(self) -> None:
         """Create internal operator user."""
         admin_password = self.workload.generate_password()
-        user = json.loads(self.workload.exec(command=f"karapace_mkpasswd -u {ADMIN_USER} -a sha512 {admin_password}"))
+        user = json.loads(
+            self.workload.exec(
+                command=f"karapace_mkpasswd -u {ADMIN_USER} -a sha512 {admin_password}"
+            )
+        )
         permissions = {
             "username": ADMIN_USER,
             "operation": "Write",

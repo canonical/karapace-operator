@@ -76,6 +76,10 @@ class PasswordActionEvents(Object):
         event.set_results({f"{username}-password": new_password})
 
     def _get_admin_credentials_action(self, event: ActionEvent) -> None:
+        """Handler for get-admin-credentials action.
+
+        Get credentials for internal `operator` user.
+        """
         authfile = self.charm.workload.read(self.charm.workload.paths.registry_authfile)
 
         if not authfile:

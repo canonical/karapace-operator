@@ -58,7 +58,7 @@ class TLSHandler(Object):
 
     def _tls_relation_created(self, _) -> None:
         """Handler for `certificates_relation_created` event."""
-        if not self.charm.unit.is_leader() or not self.charm.context.peer_relation:
+        if not self.charm.unit.is_leader() or not self.charm.context.has_peer_relation():
             return
 
         self.charm.context.cluster.update({"tls": "enabled"})
@@ -67,7 +67,9 @@ class TLSHandler(Object):
         """Handler for `certificates_relation_joined` event."""
         # generate unit private key if not already created by action
         if not self.charm.context.server.private_key:
-            self.charm.context.server.update({"private-key": generate_private_key().decode("utf-8")})
+            self.charm.context.server.update(
+                {"private-key": generate_private_key().decode("utf-8")}
+            )
 
         self._request_certificate()
 
@@ -115,7 +117,7 @@ class TLSHandler(Object):
             return
         new_csr = generate_csr(
             private_key=self.charm.context.server.private_key.encode("utf-8"),
-            subject=self.charm.context.server.data.get("private-address", ""),
+            subject=self.charm.context.server.relation_data.get("private-address", ""),
             sans_ip=self._sans["sans_ip"],
             sans_dns=self._sans["sans_dns"],
         )
@@ -147,7 +149,7 @@ class TLSHandler(Object):
 
         csr = generate_csr(
             private_key=self.charm.context.server.private_key.encode("utf-8"),
-            subject=self.charm.context.server.data.get("private-address", ""),
+            subject=self.charm.context.server.relation_data.get("private-address", ""),
             sans_ip=self._sans["sans_ip"],
             sans_dns=self._sans["sans_dns"],
         )
@@ -174,5 +176,5 @@ class TLSHandler(Object):
                     self.charm.context.server.host.split(".")[0],
                     self.charm.context.server.host,
                     socket.getfqdn(),
-                ]
+                ],
             }

@@ -4,19 +4,19 @@
 
 """Objects representing the context and state of KarapaceCharm."""
 
-from ops import Framework, Object, Relation, Unit
-
-from core.models import KarapaceServer, KarapaceCluster, Kafka
 from charms.data_platform_libs.v0.data_interfaces import (
-    KafkaRequiresData,
     DataPeerData,
     DataPeerOtherUnitData,
     DataPeerUnitData,
+    KafkaRequiresData,
 )
+from ops import Framework, Object, Relation, Unit
+
+from core.models import Kafka, KarapaceCluster, KarapaceServer
 from literals import (
+    KAFKA_CONSUMER_GROUP,
     KAFKA_REL,
     KAFKA_TOPIC,
-    KAFKA_CONSUMER_GROUP,
     PEER,
     SECRETS_UNIT,
     Status,
@@ -61,7 +61,7 @@ class ClusterContext(Object):
         if not (kafka_relation := self.model.get_relation(KAFKA_REL)):
             raise AttributeError(f"No {KAFKA_REL} found.")
         return kafka_relation
-    
+
     # --- CORE COMPONENTS ---
 
     @property
@@ -139,7 +139,7 @@ class ClusterContext(Object):
         Returns:
             True if kafka is related and `admin` user has been added. False otherwise.
         """
-        if not self.peer_relation:
+        if not self.has_peer_relation():
             return Status.NO_PEER_RELATION
 
         # TODO: Uncomment after relation is added
@@ -157,3 +157,10 @@ class ClusterContext(Object):
             return Status.NO_CREDS
 
         return Status.ACTIVE
+
+    def has_peer_relation(self) -> bool:
+        """The cluster has a peer relation."""
+        try:
+            return bool(self.peer_relation)
+        except AttributeError:
+            return False

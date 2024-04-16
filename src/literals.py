@@ -10,7 +10,6 @@ from typing import Literal
 
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, StatusBase, WaitingStatus
 
-
 CHARM_KEY = "karapace"
 SNAP_NAME = "charmed-karapace"
 CHARMED_KARAPACE_SNAP_REVISION = 1
@@ -34,7 +33,7 @@ TLS_RELATION = "certificates"
 # LOGS_RULES_DIR = "./src/alert_rules/loki"
 
 SUBSTRATE = "vm"
-USER = "root" # TODO change to snap user
+USER = "root"  # TODO change to snap user
 GROUP = "root"
 
 # FIXME create expected paths once snap is integrated
@@ -80,43 +79,8 @@ class Status(Enum):
         BlockedStatus("tls must be enabled on both karapace and kafka"), "ERROR"
     )
     KAFKA_NO_DATA = StatusLevel(WaitingStatus("kafka credentials not created yet"), "DEBUG")
-    NO_CREDS = StatusLevel(
-        WaitingStatus("internal credentials not yet added"), "DEBUG"
-    )
+    NO_CREDS = StatusLevel(WaitingStatus("internal credentials not yet added"), "DEBUG")
     NO_CERT = StatusLevel(WaitingStatus("unit waiting for signed certificates"), "INFO")
-
-
-KARAPACE_CONFIG = {
-    "access_logs_debug": False,
-    "advertised_hostname": "",  # Modified
-    "bootstrap_uri": "",  # Modified
-    "sasl_bootstrap_uri": "",  # Modified
-    "rest_authorization": False,
-    "client_id": "sr-1",
-    "compatibility": "FULL",
-    "group_id": "schema-registry",
-    "host": "127.0.0.1",
-    "log_level": "DEBUG",
-    "port": 8081,
-    "server_tls_certfile": None,
-    "server_tls_keyfile": None,
-    "registry_ca": None,
-    "master_eligibility": True,
-    "replication_factor": 1,  # Needs to be modified?
-    "security_protocol": "SASL_PLAINTEXT",
-    "ssl_cafile": None,
-    "ssl_certfile": None,
-    "ssl_keyfile": None,
-    "sasl_mechanism": "SCRAM-SHA-512",
-    "sasl_plain_username": "",  # Modified
-    "sasl_plain_password": "",  # Modified
-    "karapace_rest": False,
-    "karapace_registry": True,
-    "registry_authfile": None,  # Modified
-    "topic_name": "_schemas",
-    "protobuf_runtime_directory": "runtime",
-    "session_timeout_ms": 10000,
-}
 
 
 # FIXME remove once snap is created

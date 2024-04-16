@@ -8,8 +8,8 @@ import logging
 import os
 import subprocess
 
-from charms.operator_libs_linux.v0 import apt
-from charms.operator_libs_linux.v0 import systemd
+from charms.operator_libs_linux.v0 import apt, systemd
+
 # from charms.operator_libs_linux.v1 import snap
 from tenacity import retry
 from tenacity.retry import retry_if_not_result
@@ -18,7 +18,7 @@ from tenacity.wait import wait_fixed
 from typing_extensions import override
 
 from core.workload import WorkloadBase
-from literals import GROUP, USER, SERVICE_DEF
+from literals import GROUP, SERVICE_DEF, USER
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,9 @@ class KarapaceWorkload(WorkloadBase):
 
         try:
             self.exec("git clone https://github.com/Aiven-Open/karapace.git", working_dir="/root")
-            self.exec("pip3 install -r requirements/requirements.txt", working_dir="/root/karapace")
+            self.exec(
+                "pip3 install -r requirements/requirements.txt", working_dir="/root/karapace"
+            )
             self.exec("python3 setup.py install", working_dir="/root/karapace")
         except subprocess.CalledProcessError:
             logger.error("Error on install")

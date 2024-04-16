@@ -295,10 +295,21 @@ import copy
 import json
 import logging
 from abc import ABC, abstractmethod
-from collections import namedtuple
+from collections import UserDict, namedtuple
 from datetime import datetime
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import (
+    Callable,
+    Dict,
+    ItemsView,
+    KeysView,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    ValuesView,
+)
 
 from ops import JujuVersion, Model, Secret, SecretInfo, SecretNotFoundError
 from ops.charm import (
@@ -320,7 +331,7 @@ LIBAPI = 0
 
 # Increment this PATCH version before using `charmcraft publish-lib` or reset
 # to 0 if you are raising the major API version
-LIBPATCH = 32
+LIBPATCH = 33
 
 PYDEPS = ["ops>=2.0.0"]
 
@@ -344,8 +355,6 @@ GROUP_SEPARATOR = "@"
 class SecretGroup(str):
     """Secret groups specific type."""
 
-    pass
-
 
 class SecretGroupsAggregate(str):
     """Secret groups with option to extend with additional constants."""
@@ -367,12 +376,8 @@ class SecretGroupsAggregate(str):
         return list(self.__dict__.values())
 
     def get_group(self, group: str) -> Optional[SecretGroup]:
-        """If the input str translates to a grupname, return that."""
-        try:
-            index = self.groups().index(group)
-        except ValueError:
-            return
-        return self.groups()[index]
+        """If the input str translates to a group name, return that."""
+        return SecretGroup(group) if group in self.groups() else None
 
 
 SECRET_GROUPS = SecretGroupsAggregate()
@@ -502,8 +507,8 @@ def juju_secrets_only(f):
     return wrapper
 
 
-def static_secrets_only(f):
-    """Decorator to ensure that certain operations would be only executed on Juju3."""
+def dynamic_secrets_only(f):
+    """Decorator to ensure that certain operations would be only executed when NO static secrets are defined."""
 
     def wrapper(self, *args, **kwargs):
         if self.static_secret_fields:
@@ -516,7 +521,7 @@ def static_secrets_only(f):
 
 
 def either_static_or_dynamic_secrets(f):
-    """Decorator to ensure that certain operations would be only executed on Juju3."""
+    """Decorator to ensure that static and dynamic secrets won't be used in parallel."""
 
     def wrapper(self, *args, **kwargs):
         if self.static_secret_fields and set(self.current_secret_fields) - set(
@@ -685,14 +690,15 @@ class SecretCache:
 # Base Data
 
 
-class DataDict(dict):
+class DataDict(UserDict):
     """Python Standard Library 'dict' - like representation of Relation Data."""
 
     def __init__(self, relation_data: "Data", relation_id: int):
         self.relation_data = relation_data
         self.relation_id = relation_id
 
-    def all_data(self) -> Dict[str, str]:
+    @property
+    def data(self) -> Dict[str, str]:
         """Return the full content of the Abstract Relation Data dictionary."""
         result = self.relation_data.fetch_my_relation_data([self.relation_id])
         try:
@@ -707,7 +713,7 @@ class DataDict(dict):
         """Set an item of the Abstract Relation Data dictionary."""
         self.relation_data.update_relation_data(self.relation_id, {key: item})
 
-    def __getitem__(self, key: str) -> Optional[str]:
+    def __getitem__(self, key: str) -> str:
         """Get an item of the Abstract Relation Data dictionary."""
         result = None
         if not (result := self.relation_data.fetch_my_relation_field(self.relation_id, key)):
@@ -721,39 +727,39 @@ class DataDict(dict):
 
     def __eq__(self, d: dict) -> bool:
         """Equality."""
-        return set(self.keys()) == set(d.keys()) and all(self[key] == d[key] for key in d)
+        return self.data == d
 
     def __repr__(self) -> str:
         """String representation Abstract Relation Data dictionary."""
-        return repr(self.all_data())
+        return repr(self.data)
 
     def __len__(self) -> int:
         """Length of the Abstract Relation Data dictionary."""
-        return len(self.all_data())
+        return len(self.data)
 
     def __delitem__(self, key: str) -> None:
         """Delete an item of the Abstract Relation Data dictionary."""
         self.relation_data.delete_relation_data(self.relation_id, [key])
 
-    def has_key(self, k) -> bool:
+    def has_key(self, key: str) -> bool:
         """Does the key exist in the Abstract Relation Data dictionary?"""
-        return k in self.all_data()
+        return key in self.data
 
     def update(self, items: Dict[str, str]):
         """Update the Abstract Relation Data dictionary."""
         self.relation_data.update_relation_data(self.relation_id, items)
 
-    def keys(self) -> List[str]:
+    def keys(self) -> KeysView[str]:
         """Keys of the Abstract Relation Data dictionary."""
-        return list(self.all_data().keys())
+        return self.data.keys()
 
-    def values(self) -> List[str]:
+    def values(self) -> ValuesView[str]:
         """Values of the Abstract Relation Data dictionary."""
-        return list(self.all_data().values())
+        return self.data.values()
 
-    def items(self) -> List[Tuple[str, str]]:
+    def items(self) -> ItemsView[str, str]:
         """Items of the Abstract Relation Data dictionary."""
-        return list(self.all_data().items())
+        return self.data.items()
 
     def pop(self, item: str) -> str:
         """Pop an item of the Abstract Relation Data dictionary."""
@@ -765,11 +771,11 @@ class DataDict(dict):
 
     def __contains__(self, item: str) -> bool:
         """Does the Abstract Relation Data dictionary contain item?"""
-        return item in self.all_data().values()
+        return item in self.data.values()
 
     def __iter__(self):
         """Iterate through the Abstract Relation Data dictionary."""
-        return iter(self.all_data())
+        return iter(self.data)
 
     def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
         """Safely get an item of the Abstract Relation Data dictionary."""
@@ -1099,7 +1105,7 @@ class Data(ABC):
     # Public interface methods
     # Handling Relation Fields seamlessly, regardless if in databag or a Juju Secret
 
-    def as_dict(self, relation_id: int):
+    def as_dict(self, relation_id: int) -> UserDict:
         """Dict behavior representation of the Abstract Data."""
         return DataDict(self, relation_id)
 
@@ -1722,10 +1728,10 @@ class DataPeerData(RequirerData, ProviderData):
             if group not in SECRET_GROUPS.groups():
                 setattr(SECRET_GROUPS, group, group)
             for field in fields:
-                if secret_group := SECRET_GROUPS.get_group(group):
-                    internal_field = self._field_to_internal_name(field, secret_group)
-                    self._secret_label_map.setdefault(group, []).append(internal_field)
-                    self._secret_fields.append(internal_field)
+                secret_group = SECRET_GROUPS.get_group(group)
+                internal_field = self._field_to_internal_name(field, secret_group)
+                self._secret_label_map.setdefault(group, []).append(internal_field)
+                self._secret_fields.append(internal_field)
 
     @property
     def scope(self) -> Optional[Scope]:
@@ -1753,20 +1759,23 @@ class DataPeerData(RequirerData, ProviderData):
         )
 
     @property
-    def current_secret_fields(self):
+    def current_secret_fields(self) -> List[str]:
         """Helper method to get all currently existing secret fields (added statically or dynamically)."""
+        if not self.secrets_enabled:
+            return []
+
         if len(self._model.relations[self.relation_name]) > 1:
             raise ValueError(f"More than one peer relation on {self.relation_name}")
 
         relation = self._model.relations[self.relation_name][0]
-        # return get_encoded_list(relation, self.component, REQ_SECRET_FIELDS)
         fields = []
         for group in SECRET_GROUPS.groups():
             if content := self._get_group_secret_contents(relation, group):
                 fields += [self._field_to_internal_name(field, group) for field in content]
         return list(set(fields) | set(self._new_secrets))
 
-    @static_secrets_only
+    @juju_secrets_only
+    @dynamic_secrets_only
     def set_secret(
         self,
         relation_id: int,
@@ -1780,7 +1789,6 @@ class DataPeerData(RequirerData, ProviderData):
             relation_id: ID of the relation
             field: The secret field that is to be added
             value: The string value of the secret
-            standalone: A new secret is to be created, holding this field (only)?
             group_mapping: The name of the "secret group", in case the field is to be added to an existing secret
         """
         full_field = self._field_to_internal_name(field, group_mapping)
@@ -1790,7 +1798,8 @@ class DataPeerData(RequirerData, ProviderData):
 
     # Unlike for set_secret(), there's no harm using this operation with static secrets
     # The restricion is only added to keep the concept clear
-    @static_secrets_only
+    @juju_secrets_only
+    @dynamic_secrets_only
     def get_secret(
         self,
         relation_id: int,
@@ -1803,9 +1812,10 @@ class DataPeerData(RequirerData, ProviderData):
             raise SecretsUnavailableError(
                 f"Secret {field} from group {group_mapping} was not found"
             )
-        self.fetch_my_relation_field(relation_id, full_field)
+        return self.fetch_my_relation_field(relation_id, full_field)
 
-    @static_secrets_only
+    @juju_secrets_only
+    @dynamic_secrets_only
     def delete_secret(
         self,
         relation_id: int,
@@ -2026,10 +2036,19 @@ class DataPeerData(RequirerData, ProviderData):
             "fetch_my_relation_data() and fetch_my_relation_field()"
         )
 
+    def fetch_my_relation_field(
+        self, relation_id: int, field: str, relation_name: Optional[str] = None
+    ) -> Optional[str]:
+        """Get a single field from the relation data -- owner side.
+
+        Re-implementing the inherited function due to field@group conversion
+        """
+        if relation_data := self.fetch_my_relation_data([relation_id], [field], relation_name):
+            return relation_data.get(relation_id, {}).get(self._internal_name_to_field(field)[0])
+
     # Public functions -- inherited
 
     fetch_my_relation_data = Data.fetch_my_relation_data
-    fetch_my_relation_field = Data.fetch_my_relation_field
 
 
 class DataPeerEventHandlers(RequirerEventHandlers):

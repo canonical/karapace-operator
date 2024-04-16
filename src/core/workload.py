@@ -35,18 +35,20 @@ class KarapacePaths:
         Contains all the internal auth credentials for the service.
         """
         return f"{self.conf_path}/authfile.json"
-    
+
     @property
     def ssl_cafile(self):
         """The CA file for Karapace - Kafka SSL."""
         return f"{self.conf_path}/cacert.pem"
-            
+
     @property
     def ssl_certfile(self):
+        """The certificate for Karapace - Kafka SSL."""
         return f"{self.conf_path}/cert.pem"
 
     @property
     def ssl_keyfile(self):
+        """The private key for Karapace."""
         return f"{self.conf_path}/private.key"
 
 
