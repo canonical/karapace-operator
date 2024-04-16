@@ -5,9 +5,8 @@
 import logging
 
 import pytest
-from pytest_operator.plugin import OpsTest
-
 from helpers import APP_NAME, get_admin_credentials, set_password
+from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 

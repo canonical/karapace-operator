@@ -6,9 +6,8 @@ import asyncio
 import logging
 
 import pytest
-from pytest_operator.plugin import OpsTest
-
 from helpers import APP_NAME, DATA_INTEGRATOR, KAFKA, ZOOKEEPER
+from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 

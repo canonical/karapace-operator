@@ -7,10 +7,6 @@ import logging
 from subprocess import PIPE, check_output
 
 import pytest
-from pytest_operator.plugin import OpsTest
-
-from literals import PORT
-
 from helpers import (
     APP_NAME,
     DATA_INTEGRATOR,
@@ -21,6 +17,9 @@ from helpers import (
     get_admin_credentials,
     get_data_integrator_credentials,
 )
+from pytest_operator.plugin import OpsTest
+
+from literals import PORT
 
 logger = logging.getLogger(__name__)
 
