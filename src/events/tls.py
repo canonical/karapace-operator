@@ -77,7 +77,7 @@ class TLSHandler(Object):
         """Handler for `certificates_relation_broken` event."""
         self.charm.context.server.update({"csr": ""})
         self.charm.context.server.update({"certificate": ""})
-        self.charm.context.server.update({"ca": ""})
+        self.charm.context.server.update({"ca-cert": ""})
 
         # remove all existing keystores from the unit so we don't preserve certs
         self.charm.tls_manager.remove_stores()
@@ -100,7 +100,7 @@ class TLSHandler(Object):
             return
 
         self.charm.context.server.update({"certificate": event.certificate})
-        self.charm.context.server.update({"ca": event.ca})
+        self.charm.context.server.update({"ca-cert": event.ca})
 
         self.charm.tls_manager.set_server_key()
         self.charm.tls_manager.set_ca()

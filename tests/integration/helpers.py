@@ -31,7 +31,7 @@ async def get_admin_credentials(ops_test: OpsTest, num_unit=0) -> str:
         "get-admin-credentials"
     )
     password = await action.wait()
-    return password.results["operator-password"]
+    return password.results["password"]
 
 
 async def set_password(ops_test: OpsTest, username="operator", password=None, num_unit=0) -> str:
@@ -52,7 +52,7 @@ async def get_data_integrator_credentials(ops_test: OpsTest, num_unit=0) -> dict
         "get-credentials"
     )
     credentials = await action.wait()
-    return credentials.results
+    return credentials.results["kafka"]
 
 
 async def set_tls_private_key(ops_test: OpsTest, key: str | None = None, num_unit=0):

@@ -64,12 +64,10 @@ async def test_integrate_kafka(ops_test: OpsTest):
     )
 
     await ops_test.model.add_relation(KAFKA, ZOOKEEPER)
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=[KAFKA, ZOOKEEPER])
+    await ops_test.model.wait_for_idle(apps=[KAFKA, ZOOKEEPER])
 
     await ops_test.model.add_relation(KAFKA, DATA_INTEGRATOR)
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=[KAFKA, DATA_INTEGRATOR])
+    await ops_test.model.wait_for_idle(apps=[KAFKA, DATA_INTEGRATOR])
 
     assert ops_test.model.applications[KAFKA].status == "active"
     assert ops_test.model.applications[ZOOKEEPER].status == "active"

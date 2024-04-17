@@ -26,7 +26,11 @@ class ConfigManager:
     @property
     def parsed_confile(self) -> dict:
         """Return authfile parsed as a dict."""
-        return json.loads("\n".join(self.workload.read(self.workload.paths.karapace_config)))
+        raw_file = self.workload.read(self.workload.paths.karapace_config)
+        if not raw_file:
+            return {}
+
+        return json.loads("\n".join(raw_file))
 
     @property
     def config(self) -> dict:
