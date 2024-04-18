@@ -33,23 +33,13 @@ TLS_RELATION = "certificates"
 # LOGS_RULES_DIR = "./src/alert_rules/loki"
 
 SUBSTRATE = "vm"
-USER = "root"  # TODO change to snap user
-GROUP = "root"
+USER = "snap_daemon"
+GROUP = "snap_daemon"
 
-# FIXME create expected paths once snap is integrated
 PATHS = {
-    "CONF": "/etc/karapace",
-    "DATA": "",
-    "BIN": "",
-    "LOGS": "",
+    "CONF": f"/var/snap/{SNAP_NAME}/current/etc/karapace",
+    "LOGS": f"/var/snap/{SNAP_NAME}/common/var/log/karapace",
 }
-
-# PATHS = {
-#     "CONF": f"/var/snap/{SNAP_NAME}/current/etc/karapace",
-#     "LOGS": f"/var/snap/{SNAP_NAME}/common/var/log/karapace",
-#     "DATA": f"/var/snap/{SNAP_NAME}/common/var/lib/karapace",
-#     "BIN": f"/snap/{SNAP_NAME}/current/opt/karapace",
-# }
 
 
 AuthMechanism = Literal["SASL_PLAINTEXT", "SASL_SSL", "SSL"]
@@ -81,21 +71,3 @@ class Status(Enum):
     KAFKA_NO_DATA = StatusLevel(WaitingStatus("kafka credentials not created yet"), "DEBUG")
     NO_CREDS = StatusLevel(WaitingStatus("internal credentials not yet added"), "DEBUG")
     NO_CERT = StatusLevel(WaitingStatus("unit waiting for signed certificates"), "INFO")
-
-
-# FIXME remove once snap is created
-SERVICE_DEF = """[Unit]
-Description=Karapace service
-After=network.target
-StartLimitIntervalSec=0
-
-[Service]
-Type=simple
-Restart=always
-RestartSec=5
-User=root
-ExecStart=karapace /etc/karapace/karapace.config.json
-
-[Install]
-WantedBy=multi-user.target
-"""

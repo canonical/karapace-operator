@@ -9,9 +9,7 @@ import os
 import re
 import subprocess
 
-from charms.operator_libs_linux.v0 import apt, systemd
-
-# from charms.operator_libs_linux.v1 import snap
+from charms.operator_libs_linux.v1 import snap
 from tenacity import retry
 from tenacity.retry import retry_if_not_result
 from tenacity.stop import stop_after_attempt
@@ -19,7 +17,7 @@ from tenacity.wait import wait_fixed
 from typing_extensions import override
 
 from core.workload import WorkloadBase
-from literals import GROUP, SERVICE_DEF, USER
+from literals import CHARMED_KARAPACE_SNAP_REVISION, GROUP, SNAP_NAME, USER
 
 logger = logging.getLogger(__name__)
 
@@ -27,23 +25,31 @@ logger = logging.getLogger(__name__)
 class KarapaceWorkload(WorkloadBase):
     """Wrapper for performing common operations specific to the Karapace Snap."""
 
-    SNAP_NAME = "charmed-karapace"
-    SERVICE = "karapace"
+    SNAP_SERVICE = "daemon"
 
     def __init__(self) -> None:
-        pass
+        self.karapace = snap.SnapCache()[SNAP_NAME]
 
     @override
     def start(self) -> None:
-        systemd.service_start(self.SERVICE)
+        try:
+            self.karapace.start(services=[self.SNAP_SERVICE])
+        except snap.SnapError as e:
+            logger.exception(str(e))
 
     @override
     def stop(self) -> None:
-        systemd.service_stop(self.SERVICE)
+        try:
+            self.karapace.stop(services=[self.SNAP_SERVICE])
+        except snap.SnapError as e:
+            logger.exception(str(e))
 
     @override
     def restart(self) -> None:
-        systemd.service_restart(self.SERVICE)
+        try:
+            self.karapace.restart(services=[self.SNAP_SERVICE])
+        except snap.SnapError as e:
+            logger.exception(str(e))
 
     @override
     def read(self, path: str) -> list[str]:
@@ -89,31 +95,25 @@ class KarapaceWorkload(WorkloadBase):
     )
     @override
     def active(self) -> bool:
-        return systemd.service_running(self.SERVICE)
+        try:
+            return bool(self.karapace.services[self.SNAP_SERVICE]["active"])
+        except KeyError:
+            return False
 
     def install(self) -> bool:
-        """Install karapace service.
+        """Install charmed-karapace snap.
 
         Returns:
             True if successfully installed. False otherwise.
         """
-        apt.update()
-        apt.add_package("python3-pip")
-
         try:
-            self.exec("git clone https://github.com/Aiven-Open/karapace.git", working_dir="/root")
-            self.exec(
-                "pip3 install -r requirements/requirements.txt", working_dir="/root/karapace"
-            )
-            self.exec("python3 setup.py install", working_dir="/root/karapace")
-        except subprocess.CalledProcessError:
-            logger.error("Error on install")
+            self.karapace.ensure(snap.SnapState.Present, revision=CHARMED_KARAPACE_SNAP_REVISION)
+            self.karapace.hold()
+
+            return True
+        except (snap.SnapError) as e:
+            logger.error(str(e))
             return False
-
-        self.write(content=SERVICE_DEF, path="/etc/systemd/system/karapace.service")
-        # self.write(content="", path="/root/authfile.json")
-
-        return True
 
     @override
     def get_version(self) -> str:

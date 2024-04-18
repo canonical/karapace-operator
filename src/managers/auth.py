@@ -11,7 +11,7 @@ from typing import Literal
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import ADMIN_USER
+from literals import ADMIN_USER, SNAP_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class KarapaceAuth:
             return logger.info(f"User {username} already exists, skipping creation")
 
         user_credentials = json.loads(
-            self.workload.exec(command=f"karapace_mkpasswd -u {username} -a sha512 {password}")
+            self.workload.exec(command=f"{SNAP_NAME}.mkpasswd -u {username} -a sha512 {password}")
         )
 
         current_auth = self.parsed_authfile["users"]
@@ -102,7 +102,7 @@ class KarapaceAuth:
         admin_password = self.workload.generate_password()
         user = json.loads(
             self.workload.exec(
-                command=f"karapace_mkpasswd -u {ADMIN_USER} -a sha512 {admin_password}"
+                command=f"{SNAP_NAME}.mkpasswd -u {ADMIN_USER} -a sha512 {admin_password}"
             )
         )
         permissions = {

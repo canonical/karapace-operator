@@ -63,10 +63,9 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
     def _on_install(self, _: ops.InstallEvent):
         """Handle install event."""
-        if self.workload.install():
-            self.unit.set_workload_version(self.workload.get_version())
-        else:
+        if not self.workload.install():
             self._set_status(Status.SNAP_NOT_INSTALLED)
+        # self.unit.set_workload_version(self.workload.get_version())
 
     def _on_start(self, event: ops.StartEvent):
         """Handle start event."""

@@ -16,8 +16,6 @@ class KarapacePaths:
 
     def __init__(self):
         self.conf_path = PATHS["CONF"]
-        self.data_path = PATHS["DATA"]
-        self.binaries_path = PATHS["BIN"]
         self.logs_path = PATHS["LOGS"]
 
     @property
