@@ -120,7 +120,7 @@ class KarapaceWorkload(WorkloadBase):
         if not self.active:
             return ""
         try:
-            version = re.split(r"[\s\-]", self.exec(command="charmed-karapace.version"))[0]
+            version = re.split(r"[\s\-]", self.exec(command=f"{SNAP_NAME}.version"))[0]
         except:  # noqa: E722
             version = ""
         return version
