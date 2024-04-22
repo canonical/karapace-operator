@@ -73,14 +73,8 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             return
 
         if self.unit.is_leader() and not self.context.cluster.internal_user_credentials:
-            self.context.cluster.update({"config_changed": "added"})
+            logger.info("Creating internal user")
             self.auth_manager._create_internal_user()
-
-        if not self.config.karapace_password or not self.config.bootstrap_servers:
-            self.unit.status = ops.WaitingStatus("Waiting on config")
-            return
-
-        self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
         """Handle config changed event."""

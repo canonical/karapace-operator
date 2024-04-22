@@ -13,7 +13,4 @@ logger = logging.getLogger(__name__)
 
 class CharmConfig(BaseConfigModel):
     """Manager for the structured configuration."""
-
-    karapace_password: str
-    bootstrap_servers: str
-    username: str
+    pass
