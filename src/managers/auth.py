@@ -11,7 +11,7 @@ from typing import Literal
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import ADMIN_USER, SNAP_NAME
+from literals import ADMIN_USER
 
 logger = logging.getLogger(__name__)
 
