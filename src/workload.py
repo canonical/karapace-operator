@@ -120,7 +120,11 @@ class KarapaceWorkload(WorkloadBase):
         if not self.active:
             return ""
         try:
-            version = re.split(r"[\s\-]", self.exec(command="karapace --version"))[0]
+            version = re.split(r"[\s\-]", self.exec(command="charmed-karapace.version"))[0]
         except:  # noqa: E722
             version = ""
         return version
+
+    @override
+    def mkpasswd(self, username: str, password: str) -> str:
+        return self.exec(command=f"{SNAP_NAME}.mkpasswd -u {username} -a sha512 {password}")

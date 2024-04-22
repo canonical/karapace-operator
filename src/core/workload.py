@@ -114,6 +114,11 @@ class WorkloadBase(ABC):
         """
         ...
 
+    @abstractmethod
+    def mkpasswd(self, username: str, password: str) -> str:
+        """Return password string using Karapace helper CLI."""
+        ...
+
     @staticmethod
     def generate_password() -> str:
         """Creates randomized string for use as app passwords.

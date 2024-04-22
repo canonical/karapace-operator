@@ -47,9 +47,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         self.config_manager = ConfigManager(context=self.context, workload=self.workload)
         self.auth_manager = KarapaceAuth(context=self.context, workload=self.workload)
-        self.tls_manager = TLSManager(
-            context=self.context, workload=self.workload, substrate=self.substrate
-        )
+        self.tls_manager = TLSManager(context=self.context, workload=self.workload)
 
         # LIB HANDLERS
 
@@ -65,7 +63,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         """Handle install event."""
         if not self.workload.install():
             self._set_status(Status.SNAP_NOT_INSTALLED)
-        # self.unit.set_workload_version(self.workload.get_version())
+        self.unit.set_workload_version(self.workload.get_version())
 
     def _on_start(self, event: ops.StartEvent):
         """Handle start event."""

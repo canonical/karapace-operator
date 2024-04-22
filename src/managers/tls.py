@@ -11,7 +11,6 @@ from ops.pebble import ExecError
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import Substrate
 
 logger = logging.getLogger(__name__)
 
@@ -19,12 +18,9 @@ logger = logging.getLogger(__name__)
 class TLSManager:
     """Manager for building necessary files for TLS auth."""
 
-    def __init__(self, context: ClusterContext, workload: WorkloadBase, substrate: Substrate):
+    def __init__(self, context: ClusterContext, workload: WorkloadBase):
         self.context = context
         self.workload = workload
-        self.substrate = substrate
-
-        self.keytool = "charmed-kafka.keytool" if self.substrate == "vm" else "keytool"
 
     def generate_alias(self, app_name: str, relation_id: int) -> str:
         """Generate an alias from a relation. Used to identify ca certs."""

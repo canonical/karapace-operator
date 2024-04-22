@@ -11,7 +11,7 @@ from typing import Literal
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import ADMIN_USER, SNAP_NAME
+from literals import ADMIN_USER
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +71,7 @@ class KarapaceAuth:
         if username in self.users and not replace:
             return logger.info(f"User {username} already exists, skipping creation")
 
-        user_credentials = json.loads(
-            self.workload.exec(command=f"{SNAP_NAME}.mkpasswd -u {username} -a sha512 {password}")
-        )
+        user_credentials = json.loads(self.workload.mkpasswd(username=username, password=password))
 
         current_auth = self.parsed_authfile["users"]
         if replace:
@@ -100,11 +98,7 @@ class KarapaceAuth:
     def _create_internal_user(self) -> None:
         """Create internal operator user."""
         admin_password = self.workload.generate_password()
-        user = json.loads(
-            self.workload.exec(
-                command=f"{SNAP_NAME}.mkpasswd -u {ADMIN_USER} -a sha512 {admin_password}"
-            )
-        )
+        user = json.loads(self.workload.mkpasswd(username=ADMIN_USER, password=admin_password))
         permissions = {
             "username": ADMIN_USER,
             "operation": "Write",
