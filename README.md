@@ -1,12 +1,9 @@
-<!--
-Avoid using this README file for information that is maintained or published elsewhere, e.g.:
+# Charmed Karapace Operator
 
-* metadata.yaml > published on Charmhub
-* documentation > published on (or linked to from) Charmhub
-* detailed contribution guide > documentation or CONTRIBUTING.md
-
-Use links instead.
--->
+[![CharmHub Badge](https://charmhub.io/karapace/badge.svg)](https://charmhub.io/karapace)
+[![Release](https://github.com/canonical/karapace-operator/actions/workflows/release.yaml/badge.svg)](https://github.com/canonical/karapace-operator/actions/workflows/release.yaml)
+[![Tests](https://github.com/canonical/karapace-operator/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/canonical/karapace-operator/actions/workflows/ci.yaml?query=branch%3Amain)
+[![Docs](https://github.com/canonical/karapace-operator/actions/workflows/sync_docs.yaml/badge.svg)](https://github.com/canonical/karapace-operator/actions/workflows/sync_docs.yaml)
 
 # karapace-operator
 
