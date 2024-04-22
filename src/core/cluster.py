@@ -54,11 +54,9 @@ class ClusterContext(Object):
         return self.model.get_relation(PEER)
 
     @property
-    def kafka_relation(self) -> Relation:
+    def kafka_relation(self) -> Relation | None:
         """The relations of all client applications."""
-        if not (kafka_relation := self.model.get_relation(KAFKA_REL)):
-            raise AttributeError(f"No {KAFKA_REL} found.")
-        return kafka_relation
+        return self.model.get_relation(KAFKA_REL)
 
     # --- CORE COMPONENTS ---
 
@@ -122,7 +120,7 @@ class ClusterContext(Object):
     def kafka(self) -> Kafka:
         """The Kafka relation state."""
         return Kafka(
-            relation=self.peer_relation,
+            relation=self.kafka_relation,
             data_interface=self.kafka_requirer_interface,
             component=self.model.app,
             substrate=self.substrate,

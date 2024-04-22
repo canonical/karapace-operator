@@ -29,17 +29,17 @@ class KafkaHandler(Object):
         super().__init__(charm, "kafka_client")
         self.charm: "KarapaceCharm" = charm
 
-        self.kafka_cluster = KafkaRequiresEventHandlers(
+        self.kafka = KafkaRequiresEventHandlers(
             self.charm, relation_data=self.charm.context.kafka_requirer_interface
         )
 
         self.framework.observe(self.charm.on[KAFKA_REL].relation_broken, self._on_kafka_broken)
         self.framework.observe(
-            getattr(self.kafka_cluster.on, "bootstrap_server_changed"),
+            getattr(self.kafka.on, "bootstrap_server_changed"),
             self._on_kafka_bootstrap_server_changed,
         )
         self.framework.observe(
-            getattr(self.kafka_cluster.on, "topic_created"), self._on_kafka_topic_created
+            getattr(self.kafka.on, "topic_created"), self._on_kafka_topic_created
         )
 
     def _on_kafka_bootstrap_server_changed(self, event: BootstrapServerChangedEvent) -> None:

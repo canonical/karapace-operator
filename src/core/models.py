@@ -247,7 +247,7 @@ class Kafka(RelationState):
     @property
     def tls(self) -> bool:
         """Check if TLS is enabled on Kafka."""
-        return self.relation_data.get("tls", "")
+        return bool(self.relation_data.get("tls", "disabled") == "enabled")
 
     @property
     def kafka_ready(self) -> bool:
