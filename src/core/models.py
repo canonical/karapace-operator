@@ -66,6 +66,16 @@ class RelationState:
         for field in delete_fields:
             del self.relation_data[field]
 
+    # def update(self, items: dict[str, str]) -> None:
+    #     """Writes to relation_data."""
+    #     delete_fields = [key for key in items if not items[key]]
+    #     update_content = {k: items[k] for k in items if k not in delete_fields}
+
+    #     self.relation_data.update(update_content)
+
+    #     for field in delete_fields:
+    #         del self.relation_data[field]
+
 
 class KarapaceServer(RelationState):
     """State collection metadata for a charm unit."""
