@@ -21,8 +21,8 @@ from literals import INTERNAL_USERS, SECRETS_APP, Substrate
 logger = logging.getLogger(__name__)
 
 
-class StateBase:
-    """Base state object."""
+class RelationState:
+    """Relation state object."""
 
     def __init__(
         self,
@@ -35,30 +35,14 @@ class StateBase:
         self.data_interface = data_interface
         self.component = component
         self.substrate = substrate
+        self.relation_data = self.data_interface.as_dict(self.relation.id) if self.relation else {}
 
-    def update(self, items: dict[str, str]) -> None:
-        """Changes the state."""
-        raise NotImplementedError
-
-    def data(self) -> MutableMapping:
-        """Data representing the state."""
-        raise NotImplementedError
-
-
-class RelationState(StateBase):
-    """Base state object."""
-
-    def __init__(
-        self,
-        relation: Relation,
-        data_interface: Data,
-        component: Unit | Application,
-        substrate: Substrate,
-    ):
-        super().__init__(relation, data_interface, component, substrate)
-        # Redundant definition as lint can't resolve that super's relation may be None
-        self.relation = relation
-        self.relation_data = self.data_interface.as_dict(self.relation.id)
+    def __bool__(self):
+        """Boolean evaluation based on the existence of self.relation."""
+        try:
+            return bool(self.relation)
+        except AttributeError:
+            return False
 
     @property
     def data(self) -> MutableMapping:
@@ -67,6 +51,12 @@ class RelationState(StateBase):
 
     def update(self, items: dict[str, str]) -> None:
         """Writes to relation_data."""
+        if not self.relation:
+            logger.warning(
+                f"Fields {list(items.keys())} were attempted to be written on the relation before it exists."
+            )
+            return
+
         delete_fields = [key for key in items if not items[key]]
         update_content = {k: items[k] for k in items if k not in delete_fields}
 
@@ -75,13 +65,23 @@ class RelationState(StateBase):
         for field in delete_fields:
             del self.relation_data[field]
 
+    # def update(self, items: dict[str, str]) -> None:
+    #     """Writes to relation_data."""
+    #     delete_fields = [key for key in items if not items[key]]
+    #     update_content = {k: items[k] for k in items if k not in delete_fields}
+
+    #     self.relation_data.update(update_content)
+
+    #     for field in delete_fields:
+    #         del self.relation_data[field]
+
 
 class KarapaceServer(RelationState):
     """State collection metadata for a charm unit."""
 
     def __init__(
         self,
-        relation: Relation,
+        relation: Relation | None,
         data_interface: DataPeerUnitData,
         component: Unit,
         substrate: Substrate,
@@ -151,7 +151,7 @@ class KarapaceCluster(RelationState):
 
     def __init__(
         self,
-        relation: Relation,
+        relation: Relation | None,
         data_interface: DataPeerData,
         component: Application,
         substrate: Substrate,
@@ -216,7 +216,7 @@ class Kafka(RelationState):
 
     def __init__(
         self,
-        relation: Relation,
+        relation: Relation | None,
         data_interface: KafkaRequiresData,
         component: Application,
         substrate: Substrate,
@@ -248,15 +248,6 @@ class Kafka(RelationState):
     def tls(self) -> bool:
         """Check if TLS is enabled on Kafka."""
         return self.relation_data.get("tls", "")
-
-    @property
-    def kafka_related(self) -> bool:
-        """Checks if there is a relation with Kafka.
-
-        Returns:
-            True if there is a Kafka relation. Otherwise False
-        """
-        return bool(self.relation)
 
     @property
     def kafka_ready(self) -> bool:

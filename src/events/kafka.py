@@ -50,8 +50,7 @@ class KafkaHandler(Object):
 
     def _on_kafka_topic_created(self, event: TopicCreatedEvent) -> None:
         """Handle the topic created event."""
-        self.charm.config_manager.generate_config()
-        self.charm.workload.start()
+        self.charm._on_config_changed(event=event)
 
     def _on_kafka_broken(self, _: RelationBrokenEvent) -> None:
         """Handle the relation broken event."""

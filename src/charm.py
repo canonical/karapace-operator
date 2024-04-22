@@ -67,7 +67,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
     def _on_start(self, event: ops.StartEvent):
         """Handle start event."""
-        if not self.context.has_peer_relation():
+        if not self.context.peer_relation:
             self.unit.status = ops.WaitingStatus("waiting for peer relation")
             event.defer()
             return
@@ -89,10 +89,6 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             event.defer()
             return
 
-        if not self.config.karapace_password or not self.config.bootstrap_servers:
-            self.unit.status = ops.WaitingStatus("Waiting on config")
-            return
-
         # Load current properties set in the charm workload
         rendered_file = self.config_manager.parsed_confile
         if rendered_file != self.config_manager.config:
@@ -104,14 +100,12 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
                 )
             )
 
-            # FIXME: remove after kafka_client
-            self.config_manager._update_config(
-                uris=self.config.bootstrap_servers,
-                username=self.config.username,
-                password=self.config.karapace_password,
-            )
-
+            # Config is different, apply changes to file
             self.config_manager.generate_config()
+
+            # Restart so changes take effect
+            logger.info("Acquiring lock from _on_config_changed...")
+            self.on[f"{self.restart.name}"].acquire_lock.emit()
 
         if not self.workload.active():
             self.workload.start()
