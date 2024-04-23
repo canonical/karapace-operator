@@ -14,7 +14,6 @@ from helpers import (
     check_socket,
     get_address,
     get_admin_credentials,
-    get_data_integrator_credentials,
 )
 from pytest_operator.plugin import OpsTest
 
@@ -45,9 +44,7 @@ async def test_integrate_kafka(ops_test: OpsTest):
         ),
         ops_test.model.deploy(KAFKA, channel="3/edge", application_name=KAFKA, series="jammy"),
     )
-    await ops_test.model.wait_for_idle(
-        apps=[ZOOKEEPER, KAFKA], idle_period=30, timeout=3600
-    )
+    await ops_test.model.wait_for_idle(apps=[ZOOKEEPER, KAFKA], idle_period=30, timeout=3600)
 
     await ops_test.model.add_relation(KAFKA, ZOOKEEPER)
     await ops_test.model.wait_for_idle(apps=[KAFKA, ZOOKEEPER])
