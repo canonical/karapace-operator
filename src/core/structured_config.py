@@ -13,4 +13,5 @@ logger = logging.getLogger(__name__)
 
 class CharmConfig(BaseConfigModel):
     """Manager for the structured configuration."""
+
     pass
