@@ -13,6 +13,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerUnitData,
     KafkaRequiresData,
 )
+from charms.kafka.v0.client import KafkaClient
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 
@@ -250,6 +251,11 @@ class Kafka(RelationState):
         return bool(self.relation_data.get("tls", "disabled") == "enabled")
 
     @property
+    def security_protocol(self) -> str:
+        """Security protocol used to connect to Kafka."""
+        return "SASL_SSL" if self.tls else "SASL_PLAINTEXT"
+
+    @property
     def kafka_ready(self) -> bool:
         """Checks if there is an active Kafka relation with all necessary data.
 
@@ -260,4 +266,19 @@ class Kafka(RelationState):
         if not all([self.topic, self.username, self.password, self.bootstrap_servers]):
             return False
 
+        return True
+
+    def brokers_active(self) -> bool:
+        """Check that Kafka is active."""
+        # FIXME SSL connection info through models?
+        client = KafkaClient(
+            servers=self.bootstrap_servers.split(","),
+            username=self.username,
+            password=self.password,
+            security_protocol=self.security_protocol,
+        )
+        try:
+            client.describe_topics(["_schemas"])
+        except Exception:
+            return False
         return True

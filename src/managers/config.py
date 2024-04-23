@@ -50,9 +50,7 @@ class ConfigManager:
             "topic_name": KAFKA_TOPIC,
             "protobuf_runtime_directory": "runtime",
             "session_timeout_ms": 10000,
-            "security_protocol": "SASL_SSL"
-            if self.context.cluster.tls_enabled
-            else "SASL_PLAINTEXT",
+            "security_protocol": self.context.kafka.security_protocol,
             "ssl_cafile": self.workload.paths.ssl_cafile
             if self.context.cluster.tls_enabled
             else None,

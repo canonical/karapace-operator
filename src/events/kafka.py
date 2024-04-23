@@ -14,7 +14,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from ops import Object, RelationBrokenEvent
 
-from literals import KAFKA_REL
+from literals import KAFKA_REL, Status
 
 if TYPE_CHECKING:
     from charm import KarapaceCharm
@@ -50,9 +50,14 @@ class KafkaHandler(Object):
 
     def _on_kafka_topic_created(self, event: TopicCreatedEvent) -> None:
         """Handle the topic created event."""
+        self.charm.config_manager.generate_config()
+        self.charm.workload.start()
+
+        # Checks to ensure charm status gets set and there are no config options missing
         self.charm._on_config_changed(event=event)
 
     def _on_kafka_broken(self, _: RelationBrokenEvent) -> None:
         """Handle the relation broken event."""
         logger.info("Stopping karapace process")
         self.charm.workload.stop()
+        self.charm._set_status(Status.KAFKA_NOT_RELATED)
