@@ -30,6 +30,10 @@ class ConfigManager:
     @property
     def config(self) -> dict:
         """Return the config options."""
+        if not self.context.kafka.relation:
+            return {}
+
+        replication_factor = min([3, len(self.context.kafka.relation.units)])
         return {
             "advertised_hostname": self.context.server.host,
             "advertised_protocol": "http",
@@ -44,7 +48,7 @@ class ConfigManager:
             "log_level": "INFO",
             "port": PORT,
             "master_eligibility": True,
-            "replication_factor": 1,  # FIXME dynamic depending on related units?
+            "replication_factor": replication_factor,
             "karapace_rest": False,
             "karapace_registry": True,
             "topic_name": KAFKA_TOPIC,

@@ -99,7 +99,6 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             self.config_manager.generate_config()
 
             # Restart so changes take effect
-            logger.info("Acquiring lock from _on_config_changed...")
             self.on[f"{self.restart.name}"].acquire_lock.emit()
 
         self.unit.status = ops.ActiveStatus()
