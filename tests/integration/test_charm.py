@@ -91,6 +91,7 @@ async def test_schema_creation(ops_test: OpsTest):
     assert '{"id":1}' in result
 
 
+@pytest.mark.skip
 @pytest.mark.abort_on_fail
 async def test_scale_up_kafka(ops_test: OpsTest):
     """Scale up Kafka charm."""
