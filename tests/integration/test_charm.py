@@ -95,11 +95,8 @@ async def test_schema_creation(ops_test: OpsTest):
 async def test_scale_up_kafka(ops_test: OpsTest):
     """Scale up Kafka charm."""
     await ops_test.model.applications[KAFKA].add_units(count=2)
-    await ops_test.model.wait_for_idle(
-        apps=[ZOOKEEPER, KAFKA, APP_NAME], idle_period=30, timeout=3600
-    )
+    await ops_test.model.wait_for_idle(apps=[ZOOKEEPER, KAFKA, APP_NAME])
 
-    await ops_test.model.wait_for_idle(apps=[APP_NAME, KAFKA])
     assert ops_test.model.applications[APP_NAME].status == "active"
 
     # Schema added on the previous test, checks that karapace is still working

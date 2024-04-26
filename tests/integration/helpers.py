@@ -95,5 +95,6 @@ async def assert_list_schemas(ops_test: OpsTest, expected_schemas: str = "[]") -
         ]
     )
 
+    logger.info("Requesting schemas")
     result = check_output(command, stderr=PIPE, shell=True, universal_newlines=True)
     assert expected_schemas in result
