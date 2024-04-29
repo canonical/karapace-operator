@@ -64,12 +64,12 @@ class PasswordActionEvents(Object):
             event.fail(msg)
             return
 
-        try:
-            self.charm.auth_manager.add_user(username=username, password=new_password)
-        except Exception as e:
-            logger.error(str(e))
-            event.fail(f"unable to set password for {username}")
-            return
+        self.charm.auth_manager.add_user(username=username, password=new_password, replace=True)
+        self.charm.auth_manager.add_acl(username=username, role="admin")
+        self.charm.auth_manager.write_authfile()
+
+        # Restart needed to apply changes
+        self.charm.on[f"{self.charm.restart.name}"].acquire_lock.emit()
 
         # Store the password on application databag
         self.charm.context.cluster.relation_data.update({f"{username}-password": new_password})

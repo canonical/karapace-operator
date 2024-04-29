@@ -32,3 +32,7 @@ requires:
     interface: tls-certificates
     limit: 1
     optional: true
+
+provides:
+  karapace:
+    interface: karapace_client

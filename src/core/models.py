@@ -184,6 +184,11 @@ class KarapaceCluster(RelationState):
 
         return credentials
 
+    @property
+    def client_passwords(self) -> dict[str, str]:
+        """Usernames and passwords of related client applications."""
+        return {key: value for key, value in self.relation_data.items() if "relation-" in key}
+
     # --- TLS ---
 
     @property

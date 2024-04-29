@@ -75,7 +75,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         if self.unit.is_leader() and not self.context.cluster.internal_user_credentials:
             logger.info("Creating internal user")
-            self.auth_manager._create_internal_user()
+            self.auth_manager.create_internal_user()
 
     def _on_config_changed(self, event: ops.EventBase):
         """Handle config changed event."""
