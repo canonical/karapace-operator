@@ -49,18 +49,14 @@ class ClusterContext(Object):
     # --- RELATIONS ---
 
     @property
-    def peer_relation(self) -> Relation:
+    def peer_relation(self) -> Relation | None:
         """The cluster peer relation."""
-        if not (peer_relation := self.model.get_relation(PEER)):
-            raise AttributeError(f"No peer relation {PEER} found.")
-        return peer_relation
+        return self.model.get_relation(PEER)
 
     @property
-    def kafka_relation(self) -> Relation:
+    def kafka_relation(self) -> Relation | None:
         """The relations of all client applications."""
-        if not (kafka_relation := self.model.get_relation(KAFKA_REL)):
-            raise AttributeError(f"No {KAFKA_REL} found.")
-        return kafka_relation
+        return self.model.get_relation(KAFKA_REL)
 
     # --- CORE COMPONENTS ---
 
@@ -124,7 +120,7 @@ class ClusterContext(Object):
     def kafka(self) -> Kafka:
         """The Kafka relation state."""
         return Kafka(
-            relation=self.peer_relation,
+            relation=self.kafka_relation,
             data_interface=self.kafka_requirer_interface,
             component=self.model.app,
             substrate=self.substrate,
@@ -139,28 +135,20 @@ class ClusterContext(Object):
         Returns:
             True if kafka is related and `admin` user has been added. False otherwise.
         """
-        if not self.has_peer_relation():
+        if not self.peer_relation:
             return Status.NO_PEER_RELATION
 
-        # TODO: Uncomment after relation is added
-        # if not self.kafka.kafka_related:
-        #     return Status.KAFKA_NOT_RELATED
+        if not self.kafka:
+            return Status.KAFKA_NOT_RELATED
 
-        # if not self.kafka.kafka_ready:
-        #     return Status.KAFKA_NO_DATA
+        if not self.kafka.kafka_ready:
+            return Status.KAFKA_NO_DATA
 
-        # TLS must be enabled for Kafka and karapace or disabled for both
-        # if self.cluster.tls_enabled ^ self.kafka.tls:
-        #     return Status.KAFKA_TLS_MISMATCH
+        # TLS must be enabled for Kafka and Karapace or disabled for both
+        if self.cluster.tls_enabled ^ self.kafka.tls:
+            return Status.KAFKA_TLS_MISMATCH
 
         if not self.cluster.internal_user_credentials:
             return Status.NO_CREDS
 
         return Status.ACTIVE
-
-    def has_peer_relation(self) -> bool:
-        """The cluster has a peer relation."""
-        try:
-            return bool(self.peer_relation)
-        except AttributeError:
-            return False

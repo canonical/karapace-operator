@@ -14,7 +14,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from ops import Object, RelationBrokenEvent
 
-from literals import KAFKA_REL
+from literals import KAFKA_REL, Status
 
 if TYPE_CHECKING:
     from charm import KarapaceCharm
@@ -29,17 +29,17 @@ class KafkaHandler(Object):
         super().__init__(charm, "kafka_client")
         self.charm: "KarapaceCharm" = charm
 
-        self.kafka_cluster = KafkaRequiresEventHandlers(
+        self.kafka = KafkaRequiresEventHandlers(
             self.charm, relation_data=self.charm.context.kafka_requirer_interface
         )
 
         self.framework.observe(self.charm.on[KAFKA_REL].relation_broken, self._on_kafka_broken)
         self.framework.observe(
-            getattr(self.kafka_cluster.on, "bootstrap_server_changed"),
+            getattr(self.kafka.on, "bootstrap_server_changed"),
             self._on_kafka_bootstrap_server_changed,
         )
         self.framework.observe(
-            getattr(self.kafka_cluster.on, "topic_created"), self._on_kafka_topic_created
+            getattr(self.kafka.on, "topic_created"), self._on_kafka_topic_created
         )
 
     def _on_kafka_bootstrap_server_changed(self, event: BootstrapServerChangedEvent) -> None:
@@ -53,7 +53,11 @@ class KafkaHandler(Object):
         self.charm.config_manager.generate_config()
         self.charm.workload.start()
 
+        # Checks to ensure charm status gets set and there are no config options missing
+        self.charm._on_config_changed(event=event)
+
     def _on_kafka_broken(self, _: RelationBrokenEvent) -> None:
         """Handle the relation broken event."""
         logger.info("Stopping karapace process")
         self.charm.workload.stop()
+        self.charm._set_status(Status.KAFKA_NOT_RELATED)

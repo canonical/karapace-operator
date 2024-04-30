@@ -13,6 +13,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerUnitData,
     KafkaRequiresData,
 )
+from charms.kafka.v0.client import KafkaClient
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 
@@ -21,8 +22,8 @@ from literals import INTERNAL_USERS, SECRETS_APP, Substrate
 logger = logging.getLogger(__name__)
 
 
-class StateBase:
-    """Base state object."""
+class RelationState:
+    """Relation state object."""
 
     def __init__(
         self,
@@ -35,30 +36,14 @@ class StateBase:
         self.data_interface = data_interface
         self.component = component
         self.substrate = substrate
+        self.relation_data = self.data_interface.as_dict(self.relation.id) if self.relation else {}
 
-    def update(self, items: dict[str, str]) -> None:
-        """Changes the state."""
-        raise NotImplementedError
-
-    def data(self) -> MutableMapping:
-        """Data representing the state."""
-        raise NotImplementedError
-
-
-class RelationState(StateBase):
-    """Base state object."""
-
-    def __init__(
-        self,
-        relation: Relation,
-        data_interface: Data,
-        component: Unit | Application,
-        substrate: Substrate,
-    ):
-        super().__init__(relation, data_interface, component, substrate)
-        # Redundant definition as lint can't resolve that super's relation may be None
-        self.relation = relation
-        self.relation_data = self.data_interface.as_dict(self.relation.id)
+    def __bool__(self):
+        """Boolean evaluation based on the existence of self.relation."""
+        try:
+            return bool(self.relation)
+        except AttributeError:
+            return False
 
     @property
     def data(self) -> MutableMapping:
@@ -67,6 +52,12 @@ class RelationState(StateBase):
 
     def update(self, items: dict[str, str]) -> None:
         """Writes to relation_data."""
+        if not self.relation:
+            logger.warning(
+                f"Fields {list(items.keys())} were attempted to be written on the relation before it exists."
+            )
+            return
+
         delete_fields = [key for key in items if not items[key]]
         update_content = {k: items[k] for k in items if k not in delete_fields}
 
@@ -81,7 +72,7 @@ class KarapaceServer(RelationState):
 
     def __init__(
         self,
-        relation: Relation,
+        relation: Relation | None,
         data_interface: DataPeerUnitData,
         component: Unit,
         substrate: Substrate,
@@ -151,7 +142,7 @@ class KarapaceCluster(RelationState):
 
     def __init__(
         self,
-        relation: Relation,
+        relation: Relation | None,
         data_interface: DataPeerData,
         component: Application,
         substrate: Substrate,
@@ -216,7 +207,7 @@ class Kafka(RelationState):
 
     def __init__(
         self,
-        relation: Relation,
+        relation: Relation | None,
         data_interface: KafkaRequiresData,
         component: Application,
         substrate: Substrate,
@@ -247,16 +238,12 @@ class Kafka(RelationState):
     @property
     def tls(self) -> bool:
         """Check if TLS is enabled on Kafka."""
-        return self.relation_data.get("tls", "")
+        return bool(self.relation_data.get("tls", "disabled") == "enabled")
 
     @property
-    def kafka_related(self) -> bool:
-        """Checks if there is a relation with Kafka.
-
-        Returns:
-            True if there is a Kafka relation. Otherwise False
-        """
-        return bool(self.relation)
+    def security_protocol(self) -> str:
+        """Security protocol used to connect to Kafka."""
+        return "SASL_SSL" if self.tls else "SASL_PLAINTEXT"
 
     @property
     def kafka_ready(self) -> bool:
@@ -269,4 +256,19 @@ class Kafka(RelationState):
         if not all([self.topic, self.username, self.password, self.bootstrap_servers]):
             return False
 
+        return True
+
+    def brokers_active(self) -> bool:
+        """Check that Kafka is active."""
+        # FIXME If SSL connection is enabled we need SSL paths added to this KafkaClient
+        client = KafkaClient(
+            servers=self.bootstrap_servers.split(","),
+            username=self.username,
+            password=self.password,
+            security_protocol=self.security_protocol,
+        )
+        try:
+            client.describe_topics(["_schemas"])
+        except Exception:
+            return False
         return True

@@ -12,7 +12,6 @@ from src.literals import CONTAINER, SUBSTRATE, Status
 
 from charm import KarapaceCharm
 
-CONFIG = str(yaml.safe_load(Path("./config.yaml").read_text()))
 ACTIONS = str(yaml.safe_load(Path("./actions.yaml").read_text()))
 METADATA = str(yaml.safe_load(Path("./metadata.yaml").read_text()))
 CHARM_KEY = "karapace"
@@ -20,7 +19,7 @@ CHARM_KEY = "karapace"
 
 @pytest.fixture
 def harness() -> Harness:
-    harness = Harness(KarapaceCharm, meta=METADATA, actions=ACTIONS, config=CONFIG)
+    harness = Harness(KarapaceCharm, meta=METADATA, actions=ACTIONS)
 
     if SUBSTRATE == "k8s":
         harness.set_can_connect(CONTAINER, True)

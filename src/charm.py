@@ -58,6 +58,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
     def _on_install(self, _: ops.InstallEvent):
         """Handle install event."""
@@ -67,30 +68,20 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
     def _on_start(self, event: ops.StartEvent):
         """Handle start event."""
-        if not self.context.has_peer_relation():
+        if not self.context.peer_relation:
             self.unit.status = ops.WaitingStatus("waiting for peer relation")
             event.defer()
             return
 
         if self.unit.is_leader() and not self.context.cluster.internal_user_credentials:
-            self.context.cluster.update({"config_changed": "added"})
+            logger.info("Creating internal user")
             self.auth_manager._create_internal_user()
 
-        if not self.config.karapace_password or not self.config.bootstrap_servers:
-            self.unit.status = ops.WaitingStatus("Waiting on config")
-            return
-
-        self.unit.status = ops.ActiveStatus()
-
-    def _on_config_changed(self, event: ops.ConfigChangedEvent):
+    def _on_config_changed(self, event: ops.EventBase):
         """Handle config changed event."""
         self._set_status(self.context.ready_to_start)
         if not isinstance(self.unit.status, ops.ActiveStatus):
             event.defer()
-            return
-
-        if not self.config.karapace_password or not self.config.bootstrap_servers:
-            self.unit.status = ops.WaitingStatus("Waiting on config")
             return
 
         # Load current properties set in the charm workload
@@ -104,21 +95,24 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
                 )
             )
 
-            # FIXME: remove after kafka_client
-            self.config_manager._update_config(
-                uris=self.config.bootstrap_servers,
-                username=self.config.username,
-                password=self.config.karapace_password,
-            )
-
+            # Config is different, apply changes to file
             self.config_manager.generate_config()
 
-        if not self.workload.active():
-            self.workload.start()
-        else:
-            self.workload.restart()
+            # Restart so changes take effect
+            self.on[f"{self.restart.name}"].acquire_lock.emit()
 
         self.unit.status = ops.ActiveStatus()
+
+    def _on_update_status(self, event: ops.EventBase):
+        """Handle update status."""
+        if not self.healthy:
+            return
+
+        if not self.context.kafka.brokers_active():
+            self._set_status(Status.KAFKA_NOT_CONNECTED)
+            return
+
+        self._on_config_changed(event)
 
     def _restart(self, _: ops.EventBase) -> None:
         """Handler for emitted restart events."""
