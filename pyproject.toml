@@ -29,6 +29,7 @@ authors = []
 python = ">=3.8,<4.0"
 ops = ">=2.4.1"
 
+kafka-python = ">=2.0"
 tenacity = ">=8.0.1"
 pydantic ="^1.10.7"
 pyyaml = "^6.0.1"

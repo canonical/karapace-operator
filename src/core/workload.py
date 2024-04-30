@@ -16,8 +16,6 @@ class KarapacePaths:
 
     def __init__(self):
         self.conf_path = PATHS["CONF"]
-        self.data_path = PATHS["DATA"]
-        self.binaries_path = PATHS["BIN"]
         self.logs_path = PATHS["LOGS"]
 
     @property
@@ -114,6 +112,11 @@ class WorkloadBase(ABC):
         Returns:
             String of Karapace version
         """
+        ...
+
+    @abstractmethod
+    def mkpasswd(self, username: str, password: str) -> str:
+        """Return password string using Karapace helper CLI."""
         ...
 
     @staticmethod

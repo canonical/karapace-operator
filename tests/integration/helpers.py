@@ -6,9 +6,12 @@ import logging
 import socket
 from contextlib import closing
 from pathlib import Path
+from subprocess import PIPE, check_output
 
 import yaml
 from pytest_operator.plugin import OpsTest
+
+from literals import PORT
 
 logger = logging.getLogger(__name__)
 
@@ -75,3 +78,23 @@ async def get_address(ops_test: OpsTest, app_name=APP_NAME, unit_num=0) -> str:
 def check_socket(host: str, port: int) -> bool:
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         return sock.connect_ex((host, port)) == 0
+
+
+async def assert_list_schemas(ops_test: OpsTest, expected_schemas: str = "[]") -> None:
+    """Assert schemas can be listed."""
+    operator_password = await get_admin_credentials(ops_test)
+    address = await get_address(ops_test=ops_test)
+    command = " ".join(
+        [
+            "curl",
+            "-u",
+            f"operator:{operator_password}",
+            "-X",
+            "GET",
+            f"http://{address}:{PORT}/subjects",
+        ]
+    )
+
+    logger.info("Requesting schemas")
+    result = check_output(command, stderr=PIPE, shell=True, universal_newlines=True)
+    assert expected_schemas in result

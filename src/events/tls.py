@@ -58,7 +58,7 @@ class TLSHandler(Object):
 
     def _tls_relation_created(self, _) -> None:
         """Handler for `certificates_relation_created` event."""
-        if not self.charm.unit.is_leader() or not self.charm.context.has_peer_relation():
+        if not self.charm.unit.is_leader() or not self.charm.context.peer_relation:
             return
 
         self.charm.context.cluster.update({"tls": "enabled"})

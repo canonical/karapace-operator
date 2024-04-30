@@ -3051,7 +3051,7 @@ class KafkaRequiresEventHandlers(RequirerEventHandlers):
 
         # Sets topic, extra user roles, and "consumer-group-prefix" in the relation
         relation_data = {
-            f: getattr(self, f.replace("-", "_"), "")
+            f: getattr(self.relation_data, f.replace("-", "_"), "")
             for f in ["consumer-group-prefix", "extra-user-roles", "topic"]
         }
 

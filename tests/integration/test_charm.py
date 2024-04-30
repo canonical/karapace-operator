@@ -9,13 +9,12 @@ from subprocess import PIPE, check_output
 import pytest
 from helpers import (
     APP_NAME,
-    DATA_INTEGRATOR,
     KAFKA,
     ZOOKEEPER,
+    assert_list_schemas,
     check_socket,
     get_address,
     get_admin_credentials,
-    get_data_integrator_credentials,
 )
 from pytest_operator.plugin import OpsTest
 
@@ -34,57 +33,30 @@ async def test_build_and_deploy(ops_test: OpsTest, karapace_charm):
         karapace_charm, application_name=APP_NAME, num_units=1, series="jammy"
     )
     await ops_test.model.wait_for_idle(apps=[APP_NAME], idle_period=30, timeout=3600)
-    assert ops_test.model.applications[APP_NAME].status == "waiting"
+    assert ops_test.model.applications[APP_NAME].status == "blocked"
 
 
 @pytest.mark.abort_on_fail
 async def test_integrate_kafka(ops_test: OpsTest):
     """Integrate charm with Kafka."""
-    data_integrator_config = {
-        "topic-name": "_schemas",
-        "extra-user-roles": "admin",
-        "consumer-group-prefix": "schema-registry",
-    }
     await asyncio.gather(
         ops_test.model.deploy(
             ZOOKEEPER, channel="3/edge", application_name=ZOOKEEPER, series="jammy"
         ),
         ops_test.model.deploy(KAFKA, channel="3/edge", application_name=KAFKA, series="jammy"),
-        ops_test.model.deploy(
-            DATA_INTEGRATOR,
-            channel="edge",
-            application_name=DATA_INTEGRATOR,
-            num_units=1,
-            series="jammy",
-            config=data_integrator_config,
-        ),
     )
-    await ops_test.model.wait_for_idle(
-        apps=[ZOOKEEPER, KAFKA, DATA_INTEGRATOR], idle_period=30, timeout=3600
-    )
+    await ops_test.model.wait_for_idle(apps=[ZOOKEEPER, KAFKA], idle_period=30, timeout=3600)
 
     await ops_test.model.add_relation(KAFKA, ZOOKEEPER)
     await ops_test.model.wait_for_idle(apps=[KAFKA, ZOOKEEPER])
 
-    await ops_test.model.add_relation(KAFKA, DATA_INTEGRATOR)
-    await ops_test.model.wait_for_idle(apps=[KAFKA, DATA_INTEGRATOR])
-
     assert ops_test.model.applications[KAFKA].status == "active"
     assert ops_test.model.applications[ZOOKEEPER].status == "active"
-    assert ops_test.model.applications[DATA_INTEGRATOR].status == "active"
 
-    data_integrator_creds = await get_data_integrator_credentials(ops_test)
+    await ops_test.model.add_relation(KAFKA, APP_NAME)
+    await ops_test.model.wait_for_idle(apps=[KAFKA, APP_NAME])
 
-    # FIXME
-    await ops_test.model.applications[APP_NAME].set_config(
-        {
-            "username": data_integrator_creds["username"],
-            "karapace_password": data_integrator_creds["password"],
-            "bootstrap_servers": data_integrator_creds["endpoints"],
-        }
-    )
-
-    await ops_test.model.wait_for_idle(apps=[APP_NAME])
+    await ops_test.model.wait_for_idle(apps=[APP_NAME, KAFKA])
     assert ops_test.model.applications[APP_NAME].status == "active"
 
 
@@ -117,3 +89,16 @@ async def test_schema_creation(ops_test: OpsTest):
 
     result = check_output(command, stderr=PIPE, shell=True, universal_newlines=True)
     assert '{"id":1}' in result
+
+
+@pytest.mark.skip
+@pytest.mark.abort_on_fail
+async def test_scale_up_kafka(ops_test: OpsTest):
+    """Scale up Kafka charm."""
+    await ops_test.model.applications[KAFKA].add_units(count=2)
+    await ops_test.model.wait_for_idle(apps=[ZOOKEEPER, KAFKA, APP_NAME])
+
+    assert ops_test.model.applications[APP_NAME].status == "active"
+
+    # Schema added on the previous test, checks that karapace is still working
+    assert await assert_list_schemas(ops_test, expected_schemas="[test-key]")
