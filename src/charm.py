@@ -14,6 +14,7 @@ from core.cluster import ClusterContext
 from core.structured_config import CharmConfig
 from events.kafka import KafkaHandler
 from events.password_actions import PasswordActionEvents
+from events.provider import KarapaceHandler
 from events.tls import TLSHandler
 from literals import CHARM_KEY, DebugLevel, Status, Substrate
 from managers.auth import KarapaceAuth
@@ -42,6 +43,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.password_action_events = PasswordActionEvents(self)
         self.kafka = KafkaHandler(self)
         self.tls = TLSHandler(self)
+        self.provider = KarapaceHandler(self)
 
         # MANAGERS
 

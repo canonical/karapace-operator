@@ -145,10 +145,13 @@ class KarapaceAuth:
 
     def remove_user(self, username: str) -> None:
         """Remove username and ACLs."""
-        del self.auth_dict[username]
+        self.auth_dict.pop(username, None)
 
     def write_authfile(self):
-        """Add users or ACLs to authfile.json."""
+        """Add users or ACLs to authfile.json.
+
+        NOTE: for changes to be applied to Karapace, service needs to be restared.
+        """
         authfile_users = []
         authfile_permissions = []
 
