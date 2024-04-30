@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from charms.data_platform_libs.v0.data_interfaces import (
     BootstrapServerChangedEvent,
-    KafkaRequiresEventHandlers,
+    KafkaRequirerEventHandlers,
     TopicCreatedEvent,
 )
 from ops import Object, RelationBrokenEvent
@@ -29,7 +29,7 @@ class KafkaHandler(Object):
         super().__init__(charm, "kafka_client")
         self.charm: "KarapaceCharm" = charm
 
-        self.kafka = KafkaRequiresEventHandlers(
+        self.kafka = KafkaRequirerEventHandlers(
             self.charm, relation_data=self.charm.context.kafka_requirer_interface
         )
 

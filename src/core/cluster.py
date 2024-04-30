@@ -8,7 +8,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerData,
     DataPeerOtherUnitData,
     DataPeerUnitData,
-    KafkaRequiresData,
+    KafkaRequirerData,
 )
 from ops import Framework, Object, Relation, Unit
 
@@ -39,7 +39,7 @@ class ClusterContext(Object):
             self.model, relation_name=PEER, additional_secret_fields=SECRETS_UNIT
         )
 
-        self.kafka_requirer_interface = KafkaRequiresData(
+        self.kafka_requirer_interface = KafkaRequirerData(
             model=self.model,
             relation_name=KAFKA_REL,
             topic=KAFKA_TOPIC,

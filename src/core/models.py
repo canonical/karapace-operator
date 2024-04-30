@@ -11,7 +11,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     Data,
     DataPeerData,
     DataPeerUnitData,
-    KafkaRequiresData,
+    KafkaRequirerData,
 )
 from charms.kafka.v0.client import KafkaClient
 from ops.model import Application, Relation, Unit
@@ -213,7 +213,7 @@ class Kafka(RelationState):
     def __init__(
         self,
         relation: Relation | None,
-        data_interface: KafkaRequiresData,
+        data_interface: KafkaRequirerData,
         component: Application,
         substrate: Substrate,
     ):
