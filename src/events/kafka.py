@@ -46,7 +46,7 @@ class KafkaHandler(Object):
         """Handle the bootstrap server changed."""
         # Event triggered when a bootstrap server was changed for this application
         logger.info(f"Bootstrap servers changed into: {event.bootstrap_server}")
-        self.charm._on_config_changed(event=event)
+        self.charm.on.config_changed.emit()
 
     def _on_kafka_topic_created(self, event: TopicCreatedEvent) -> None:
         """Handle the topic created event."""
@@ -54,10 +54,7 @@ class KafkaHandler(Object):
         self.charm.workload.start()
 
         # Checks to ensure charm status gets set and there are no config options missing
-        self.charm._on_config_changed(event=event)
-
-        # Checks to ensure charm status gets set and there are no config options missing
-        self.charm._on_config_changed(event=event)
+        self.charm.on.config_changed.emit()
 
     def _on_kafka_broken(self, _: RelationBrokenEvent) -> None:
         """Handle the relation broken event."""

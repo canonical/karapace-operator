@@ -65,7 +65,7 @@ class KarapaceHandler(Object):
         # non-leader units need cluster_config_changed event to update their super.users
         self.charm.context.cluster.update({"super-users": self.charm.context.super_users})
 
-        self.karapace_provider.set_endpoint(relation.id, ",".join(endpoints))
+        self.karapace_provider.set_endpoint(relation.id, endpoints)
         self.karapace_provider.set_credentials(relation.id, username, password)
         self.karapace_provider.set_tls(relation.id, tls)
         self.karapace_provider.set_subject(relation.id, subject)

@@ -86,7 +86,7 @@ class KarapaceServer(RelationState):
 
         e.g karapace/1 --> 1
         """
-        return int(self.component.name.split("/")[1])
+        return int(self.unit.name.split("/")[1])
 
     # -- Cluster Init --
 
@@ -110,7 +110,7 @@ class KarapaceServer(RelationState):
                     break
 
         if self.substrate == "k8s":
-            host = f"{self.component.name.split('/')[0]}-{self.unit_id}.{self.component.name.split('/')[0]}-endpoints"
+            host = f"{self.unit.name.split('/')[0]}-{self.unit_id}.{self.unit.name.split('/')[0]}-endpoints"
 
         return host  # pyright: ignore reportGeneralTypeIssues
 

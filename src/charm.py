@@ -79,7 +79,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             logger.info("Creating internal user")
             self.auth_manager.create_internal_user()
 
-    def _on_config_changed(self, event: ops.EventBase):
+    def _on_config_changed(self, event: ops.ConfigChangedEvent):
         """Handle config changed event."""
         self._set_status(self.context.ready_to_start)
         if not isinstance(self.unit.status, ops.ActiveStatus):
@@ -105,7 +105,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         self.unit.status = ops.ActiveStatus()
 
-    def _on_update_status(self, event: ops.EventBase):
+    def _on_update_status(self, event: ops.UpdateStatusEvent):
         """Handle update status."""
         if not self.healthy:
             return
@@ -114,7 +114,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             self._set_status(Status.KAFKA_NOT_CONNECTED)
             return
 
-        self._on_config_changed(event)
+        self.on.config_changed.emit()
 
     def _restart(self, _: ops.EventBase) -> None:
         """Handler for emitted restart events."""

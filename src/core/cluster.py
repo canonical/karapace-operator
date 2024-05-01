@@ -161,22 +161,16 @@ class ClusterContext(Object):
         return ";".join(super_users_arg)
 
     @property
-    def unit_hosts(self) -> list[str]:
-        """Return list of application unit hosts."""
-        hosts = [server.host for server in self.servers]
-        return hosts
-
-    @property
-    def endpoints(self) -> list[str]:
+    def endpoints(self) -> str:
         """The current Karapace uris.
 
         Returns:
             List of servers
         """
         if not self.peer_relation:
-            return []
+            return ""
 
-        return sorted([f"{host}:{PORT}" for host in self.unit_hosts])
+        return ",".join(sorted([f"{server.host}:{PORT}" for server in self.servers]))
 
     @property
     def ready_to_start(self) -> Status:
