@@ -27,7 +27,9 @@ class PasswordActionEvents(Object):
         self.framework.observe(
             getattr(self.charm.on, "set_password_action"), self._set_password_action
         )
-        self.framework.observe(getattr(self.charm.on, "get-password"), self._get_password_action)
+        self.framework.observe(
+            getattr(self.charm.on, "get_password_action"), self._get_password_action
+        )
 
     def _set_password_action(self, event: ActionEvent) -> None:
         """Handler for set-password action.
