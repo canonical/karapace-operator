@@ -31,9 +31,7 @@ async def get_admin_credentials(ops_test: OpsTest, num_unit=0) -> str:
     Return:
         String with the password stored on the peer relation databag.
     """
-    action = await ops_test.model.units.get(f"{APP_NAME}/{num_unit}").run_action(
-        "get-admin-credentials"
-    )
+    action = await ops_test.model.units.get(f"{APP_NAME}/{num_unit}").run_action("get-password")
     password = await action.wait()
     return password.results["password"]
 

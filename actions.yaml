@@ -27,6 +27,12 @@ set-tls-private-key:
         Content will be auto-generated if this option is not specified.
         Can be raw-string, or base64 encoded.
 
-get-admin-credentials:
-  description: Get administrator authentication credentials for client commands.
-    This action must be called on the leader unit.
+get-password:
+  description:
+    Fetch the password of the provided internal user of the charm, used for internal charm operations.
+    It is for internal charm users only, and SHOULD NOT be used by applications.
+  params:
+    username:
+      type: string
+      description: The username, the default value 'operator'.
+        Possible values - operator
