@@ -17,6 +17,7 @@ CONTAINER = "karapace"
 PORT = 8081
 
 PEER = "cluster"
+KARAPACE_REL = "karapace"
 KAFKA_REL = "kafka"
 KAFKA_TOPIC = "_schemas"
 KAFKA_CONSUMER_GROUP = "schema-registry"

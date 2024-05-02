@@ -11,7 +11,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     Data,
     DataPeerData,
     DataPeerUnitData,
-    KafkaRequiresData,
+    KafkaRequirerData,
 )
 from charms.kafka.v0.client import KafkaClient
 from ops.model import Application, Relation, Unit
@@ -86,7 +86,7 @@ class KarapaceServer(RelationState):
 
         e.g karapace/1 --> 1
         """
-        return int(self.component.name.split("/")[1])
+        return int(self.unit.name.split("/")[1])
 
     # -- Cluster Init --
 
@@ -110,7 +110,7 @@ class KarapaceServer(RelationState):
                     break
 
         if self.substrate == "k8s":
-            host = f"{self.component.name.split('/')[0]}-{self.unit_id}.{self.component.name.split('/')[0]}-endpoints"
+            host = f"{self.unit.name.split('/')[0]}-{self.unit_id}.{self.unit.name.split('/')[0]}-endpoints"
 
         return host  # pyright: ignore reportGeneralTypeIssues
 
@@ -184,6 +184,11 @@ class KarapaceCluster(RelationState):
 
         return credentials
 
+    @property
+    def client_passwords(self) -> dict[str, str]:
+        """Usernames and passwords of related client applications."""
+        return {key: value for key, value in self.relation_data.items() if "relation-" in key}
+
     # --- TLS ---
 
     @property
@@ -208,7 +213,7 @@ class Kafka(RelationState):
     def __init__(
         self,
         relation: Relation | None,
-        data_interface: KafkaRequiresData,
+        data_interface: KafkaRequirerData,
         component: Application,
         substrate: Substrate,
     ):

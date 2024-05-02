@@ -22,6 +22,7 @@ KAFKA = "kafka"
 ZOOKEEPER = "zookeeper"
 DATA_INTEGRATOR = "data-integrator"
 TLS_CERTIFICATES_OPERATOR = "tls-certificates-operator"
+DUMMY_NAME = "app"
 
 
 async def get_admin_credentials(ops_test: OpsTest, num_unit=0) -> str:

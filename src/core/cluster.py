@@ -8,16 +8,19 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerData,
     DataPeerOtherUnitData,
     DataPeerUnitData,
-    KafkaRequiresData,
+    KafkaRequirerData,
 )
 from ops import Framework, Object, Relation, Unit
 
 from core.models import Kafka, KarapaceCluster, KarapaceServer
 from literals import (
+    INTERNAL_USERS,
     KAFKA_CONSUMER_GROUP,
     KAFKA_REL,
     KAFKA_TOPIC,
+    KARAPACE_REL,
     PEER,
+    PORT,
     SECRETS_UNIT,
     Status,
     Substrate,
@@ -36,7 +39,7 @@ class ClusterContext(Object):
             self.model, relation_name=PEER, additional_secret_fields=SECRETS_UNIT
         )
 
-        self.kafka_requirer_interface = KafkaRequiresData(
+        self.kafka_requirer_interface = KafkaRequirerData(
             model=self.model,
             relation_name=KAFKA_REL,
             topic=KAFKA_TOPIC,
@@ -55,8 +58,13 @@ class ClusterContext(Object):
 
     @property
     def kafka_relation(self) -> Relation | None:
-        """The relations of all client applications."""
+        """The relation with Kafka."""
         return self.model.get_relation(KAFKA_REL)
+
+    @property
+    def karapace_relations(self) -> set[Relation]:
+        """The relations of all client applications."""
+        return set(self.model.relations[KARAPACE_REL])
 
     # --- CORE COMPONENTS ---
 
@@ -127,6 +135,42 @@ class ClusterContext(Object):
         )
 
     # --- ADDITIONAL METHODS ---
+
+    @property
+    def super_users(self) -> str:
+        """Generates all users with super/admin permissions for the cluster from relations.
+
+        Formatting allows passing to the `super.users` property.
+
+        Returns:
+            Semicolon delimited string of current super users
+        """
+        super_users = set(INTERNAL_USERS)
+        for relation in self.karapace_relations:
+            if not relation or not relation.app:
+                continue
+
+            extra_user_roles = relation.data[relation.app].get("extra-user-roles", "")
+            password = self.cluster.relation_data.get(f"relation-{relation.id}", None)
+            # if passwords are set for client admins, they're good to load
+            if "admin" in extra_user_roles and password:
+                super_users.add(f"relation-{relation.id}")
+
+        super_users_arg = sorted([f"User:{user}" for user in super_users])
+
+        return ";".join(super_users_arg)
+
+    @property
+    def endpoints(self) -> str:
+        """The current Karapace uris.
+
+        Returns:
+            List of servers
+        """
+        if not self.peer_relation:
+            return ""
+
+        return ",".join(sorted([f"{server.host}:{PORT}" for server in self.servers]))
 
     @property
     def ready_to_start(self) -> Status:
