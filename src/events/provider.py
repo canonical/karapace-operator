@@ -60,10 +60,9 @@ class KarapaceHandler(Object):
         self.charm.auth_manager.write_authfile()
 
         # non-leader units need cluster_config_changed event to update their super.users
-        self.charm.context.cluster.update({username: password})
-
-        # non-leader units need cluster_config_changed event to update their super.users
-        self.charm.context.cluster.update({"super-users": self.charm.context.super_users})
+        self.charm.context.cluster.update(
+            {username: password, "super-users": self.charm.context.super_users}
+        )
 
         self.karapace_provider.set_endpoint(relation.id, endpoints)
         self.karapace_provider.set_credentials(relation.id, username, password)
@@ -76,10 +75,7 @@ class KarapaceHandler(Object):
     def _on_relation_broken(self, event: RelationBrokenEvent):
         """Handle relation broken event."""
         # don't remove anything if app is going down
-        if self.charm.app.planned_units == 0:
-            return
-
-        if not self.charm.unit.is_leader():
+        if not self.charm.unit.is_leader() or self.charm.app.planned_units == 0:
             return
 
         if not self.charm.healthy:

@@ -153,7 +153,7 @@ class ClusterContext(Object):
             extra_user_roles = relation.data[relation.app].get("extra-user-roles", "")
             password = self.cluster.relation_data.get(f"relation-{relation.id}", None)
             # if passwords are set for client admins, they're good to load
-            if "admin" in extra_user_roles and password is not None:
+            if "admin" in extra_user_roles and password:
                 super_users.add(f"relation-{relation.id}")
 
         super_users_arg = sorted([f"User:{user}" for user in super_users])

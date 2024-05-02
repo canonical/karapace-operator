@@ -6,8 +6,8 @@
 
 import json
 import logging
-from dataclasses import dataclass
-from typing import Literal, TypedDict
+from dataclasses import asdict, dataclass, field
+from typing import Literal
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
@@ -21,22 +21,13 @@ Operation = Literal["Read", "Write"]
 Role = Literal["admin", "user"]
 
 
-@dataclass()
+@dataclass
 class Acl:
     """Convenience object for representing a Karapace ACL."""
 
     username: str
     operation: Operation
     resource: str
-
-    @property
-    def acl_repr(self) -> dict[str, str]:
-        """Returns the dict with an ACL representation."""
-        return {
-            "username": self.username,
-            "operation": self.operation,
-            "resource": self.resource,
-        }
 
 
 @dataclass
@@ -48,22 +39,13 @@ class UserCredentials:
     salt: str
     password_hash: str
 
-    @property
-    def creds_repr(self) -> dict[str, str]:
-        """Returns the dict with an credentials representation."""
-        return {
-            "username": self.username,
-            "algorithm": self.algorithm,
-            "salt": self.salt,
-            "password_hash": self.password_hash,
-        }
 
-
-class AuthDictEntry(TypedDict):
+@dataclass
+class AuthDictEntry:
     """Data entry for internal auth state on KarapaceAuth."""
 
     credentials: UserCredentials
-    acls: list[Acl]
+    acls: list[Acl] = field(default_factory=list)
 
 
 class KarapaceAuth:
@@ -89,7 +71,29 @@ class KarapaceAuth:
         self._load_authfile()
 
     def _load_authfile(self) -> None:
-        """Load current Karapace authfile."""
+        """Load current Karapace authfile.
+
+        Authfile has the following format:
+        ```
+        {
+            "users": [
+                {
+                    "username": "example-user",
+                    "algorithm": "scrypt",
+                    "salt": "<salt for randomized hashing>",
+                    "password_hash": "<hashed password>"
+                },
+            ],
+            "permissions": [
+                {
+                    "username": "example-user",
+                    "operation": "Write",
+                    "resource": ".*"
+                },
+            ]
+        }
+        ```
+        """
         # Internal state of auth to the class
         self.auth_dict: dict[str, AuthDictEntry] = {}
 
@@ -116,12 +120,10 @@ class KarapaceAuth:
         user_creds = UserCredentials(
             **json.loads(self.workload.mkpasswd(username=username, password=password))
         )
-        # If username doesn't exist we need to initialize the internal dictionary.
-        # Maybe default dict is a more elegant solution here.
-        if username not in self.auth_dict:
-            self.auth_dict[username] = AuthDictEntry(credentials=user_creds, acls=[])
-        else:
-            self.auth_dict[username]["credentials"] = user_creds
+
+        # Maybe defaultdict is a more elegant solution here.
+        new_entry = {username: AuthDictEntry(credentials=user_creds)}
+        self.auth_dict = self.auth_dict | new_entry
 
     def add_acl(self, username: str, role: Role, subject: str | None = None) -> None:
         """Add Acls for a specific user.
@@ -134,6 +136,10 @@ class KarapaceAuth:
             role: role of the user
             subject: string with the subject resource the user is allowed to access
         """
+        if username not in self.auth_dict:
+            logger.warning(f"User {username} does not exist. Skipping ACL creation")
+            return
+
         acls = []
         if role == "admin":
             acls.append(Acl(username=username, operation="Write", resource=".*"))
@@ -141,7 +147,7 @@ class KarapaceAuth:
             acls.append(Acl(username=username, operation="Read", resource="Config:"))
             acls.append(Acl(username=username, operation="Read", resource=f"Subject:{subject}.*"))
 
-        self.auth_dict[username]["acls"] = acls
+        self.auth_dict[username].acls = acls
 
     def remove_user(self, username: str) -> None:
         """Remove username and ACLs."""
@@ -156,12 +162,13 @@ class KarapaceAuth:
         authfile_permissions = []
 
         for user in self.auth_dict.values():
-            authfile_users.append(user["credentials"].creds_repr)
-            authfile_permissions += [acl.acl_repr for acl in user["acls"]]
+            authfile_users.append(asdict(user.credentials))
+            authfile_permissions += [asdict(acl) for acl in user.acls]
 
         json_str = json.dumps(
             {"users": authfile_users, "permissions": authfile_permissions}, indent=2
         )
+        logger.debug(f"Writing new authfile:\n {json_str}\n")
         self.workload.write(content=json_str, path=self.workload.paths.registry_authfile)
 
     def create_internal_user(self) -> None:
