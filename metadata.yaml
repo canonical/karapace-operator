@@ -1,0 +1,45 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: karapace
+display-name: Charmed Karapace
+description: |
+  Karapace is a solution to store schemas. These schemas can be used to serialize/deserialize
+  messages on Kafka.
+summary: Charmed Karapace Operator
+# docs: https://discourse.charmhub.io/t/charmed-kafka-documentation/10288
+source: https://github.com/canonical/karapace-operator
+issues: https://github.com/canonical/karapace-operator/issues
+website:
+  - https://ubuntu.com/data/kafka
+  - https://canonical.com/data/docs/kafka/iaas
+  - https://charmhub.io/karapace
+  - https://github.com/canonical/karapace-operator
+  - https://matrix.to/#/%23charmhub-data-platform%3Aubuntu.com
+maintainers:
+  - Canonical Data Platform <data-platform@lists.launchpad.net>
+series:
+  - jammy
+
+peers:
+  cluster:
+    interface: cluster
+  restart:
+    interface: rolling_op
+
+requires:
+  kafka:
+    interface: kafka_client
+    limit: 1
+  certificates:
+    interface: tls-certificates
+    limit: 1
+    optional: true
+  certificates:
+    interface: tls-certificates
+    limit: 1
+    optional: true
+
+provides:
+  karapace:
+    interface: karapace_client
