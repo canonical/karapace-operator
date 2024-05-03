@@ -53,6 +53,7 @@ jobs:
           - integration-charm
           - integration-password-rotation
           - integration-provider
+          - integration-tls
     name: ${{ matrix.tox-environments }}
     needs:
       - lint

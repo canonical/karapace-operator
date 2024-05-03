@@ -4,6 +4,8 @@
 
 """Objects representing the context and state of KarapaceCharm."""
 
+from typing import TYPE_CHECKING
+
 from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerData,
     DataPeerOtherUnitData,
@@ -26,12 +28,16 @@ from literals import (
     Substrate,
 )
 
+if TYPE_CHECKING:
+    from charm import KarapaceCharm
+
 
 class ClusterContext(Object):
     """Properties and relations of the charm."""
 
     def __init__(self, charm: Framework | Object, substrate: Substrate):
         super().__init__(parent=charm, key="charm_context")
+        self.charm: "KarapaceCharm" = charm
         self.substrate: Substrate = substrate
 
         self.peer_app_interface = DataPeerData(self.model, relation_name=PEER)
@@ -132,6 +138,9 @@ class ClusterContext(Object):
             data_interface=self.kafka_requirer_interface,
             component=self.model.app,
             substrate=self.substrate,
+            cafile_path=self.charm.workload.paths.ssl_cafile,
+            certfile_path=self.charm.workload.paths.ssl_certfile,
+            keyfile_path=self.charm.workload.paths.ssl_keyfile,
         )
 
     # --- ADDITIONAL METHODS ---

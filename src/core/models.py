@@ -216,9 +216,15 @@ class Kafka(RelationState):
         data_interface: KafkaRequirerData,
         component: Application,
         substrate: Substrate,
+        cafile_path: str,
+        certfile_path: str,
+        keyfile_path: str,
     ):
         super().__init__(relation, data_interface, component, substrate)
         self.app = component
+        self.cafile_path = cafile_path
+        self.certfile_path = certfile_path
+        self.keyfile_path = keyfile_path
 
     @property
     def topic(self) -> str:
@@ -271,6 +277,9 @@ class Kafka(RelationState):
             username=self.username,
             password=self.password,
             security_protocol=self.security_protocol,
+            cafile_path=self.cafile_path,
+            certfile_path=self.certfile_path,
+            keyfile_path=self.keyfile_path,
         )
         try:
             client.describe_topics(["_schemas"])
