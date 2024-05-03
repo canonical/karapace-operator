@@ -53,11 +53,9 @@ async def test_karapace_tls(ops_test: OpsTest):
     """Tests TLS on Karapace."""
     # Relate Kafka[TLS] to Karapace[Non-TLS]
     await ops_test.model.add_relation(KAFKA, APP_NAME)
+    await ops_test.model.wait_for_idle(apps=[KAFKA], idle_period=15, timeout=1000, status="active")
     await ops_test.model.wait_for_idle(
-        apps=[KAFKA], idle_period=15, timeout=1000, status="active"
-    )
-    await ops_test.model.wait_for_idle(
-        apps=[KAFKA], idle_period=15, timeout=1000, status="blocked"
+        apps=[APP_NAME], idle_period=15, timeout=1000, status="blocked"
     )
 
     # Unit is on 'blocked' but whole app is on 'waiting'
