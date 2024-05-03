@@ -48,7 +48,6 @@ async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
     assert ops_test.model.applications[KAFKA].status == "active"
 
 
-@pytest.mark.skip(reason="No relation yet between kafka-karapace")
 @pytest.mark.abort_on_fail
 async def test_karapace_tls(ops_test: OpsTest):
     """Tests TLS on Karapace."""
