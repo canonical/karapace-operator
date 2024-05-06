@@ -13,7 +13,6 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerUnitData,
     KafkaRequirerData,
 )
-from charms.kafka.v0.client import KafkaClient
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 
@@ -261,19 +260,4 @@ class Kafka(RelationState):
         if not all([self.topic, self.username, self.password, self.bootstrap_servers]):
             return False
 
-        return True
-
-    def brokers_active(self) -> bool:
-        """Check that Kafka is active."""
-        # FIXME If SSL connection is enabled we need SSL paths added to this KafkaClient
-        client = KafkaClient(
-            servers=self.bootstrap_servers.split(","),
-            username=self.username,
-            password=self.password,
-            security_protocol=self.security_protocol,
-        )
-        try:
-            client.describe_topics(["_schemas"])
-        except Exception:
-            return False
         return True

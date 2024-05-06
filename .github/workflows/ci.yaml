@@ -46,13 +46,13 @@ jobs:
 
   integration-test:
     strategy:
-      max-parallel: 1
       fail-fast: false
       matrix:
         tox-environments:
           - integration-charm
           - integration-password-rotation
           - integration-provider
+          - integration-tls
     name: ${{ matrix.tox-environments }}
     needs:
       - lint

@@ -19,6 +19,7 @@ from events.tls import TLSHandler
 from literals import CHARM_KEY, DebugLevel, Status, Substrate
 from managers.auth import KarapaceAuth
 from managers.config import ConfigManager
+from managers.kafka import KafkaManager
 from managers.tls import TLSManager
 from workload import KarapaceWorkload
 
@@ -50,6 +51,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.config_manager = ConfigManager(context=self.context, workload=self.workload)
         self.auth_manager = KarapaceAuth(context=self.context, workload=self.workload)
         self.tls_manager = TLSManager(context=self.context, workload=self.workload)
+        self.kafka_manager = KafkaManager(context=self.context, workload=self.workload)
 
         # LIB HANDLERS
 
@@ -110,7 +112,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         if not self.healthy:
             return
 
-        if not self.context.kafka.brokers_active():
+        if not self.kafka_manager.brokers_active():
             self._set_status(Status.KAFKA_NOT_CONNECTED)
             return
 
