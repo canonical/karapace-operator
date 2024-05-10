@@ -73,13 +73,18 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
     def _on_start(self, event: ops.StartEvent):
         """Handle start event."""
         if not self.context.peer_relation:
-            self.unit.status = ops.WaitingStatus("waiting for peer relation")
+            self._set_status(Status.NO_PEER_RELATION)
             event.defer()
             return
 
-        if self.unit.is_leader() and not self.context.cluster.internal_user_credentials:
-            logger.info("Creating internal user")
+        if self.context.cluster.internal_user_credentials:
+            self.auth_manager.update_admin_user()
+        elif self.unit.is_leader():
             self.auth_manager.create_internal_user()
+        else:
+            # Unit is not leader and there are no internal credentials added yet
+            event.defer()
+            return
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
         """Handle config changed event."""

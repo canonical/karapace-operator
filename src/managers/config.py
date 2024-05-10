@@ -8,7 +8,7 @@ import json
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import KAFKA_CONSUMER_GROUP, KAFKA_TOPIC, PORT
+from literals import KAFKA_CONSUMER_GROUP, KAFKA_TOPIC, PORT, REPLICATION_PORT
 
 
 class ConfigManager:
@@ -35,25 +35,30 @@ class ConfigManager:
 
         replication_factor = min([3, len(self.context.kafka.relation.units)])
         return {
+            # Active services
+            "karapace_rest": False,
+            "karapace_registry": True,
+            # Replication properties
             "advertised_hostname": self.context.server.host,
             "advertised_protocol": "http",
+            "advertised_port": REPLICATION_PORT,
+            "client_id": f"sr-{self.context.server.unit_id}",
+            "master_eligibility": True,
+            # REST server options
+            "host": self.context.server.host,
+            "port": PORT,
             "server_tls_certfile": None,  # running the server in HTTPS mode.
             "server_tls_keyfile": None,
             "access_logs_debug": False,
             "rest_authorization": False,
-            "client_id": "sr-1",
             "compatibility": "FULL",
-            "group_id": KAFKA_CONSUMER_GROUP,
-            "host": self.context.server.host,
             "log_level": "INFO",
-            "port": PORT,
-            "master_eligibility": True,
-            "replication_factor": replication_factor,
-            "karapace_rest": False,
-            "karapace_registry": True,
-            "topic_name": KAFKA_TOPIC,
             "protobuf_runtime_directory": "runtime",
             "session_timeout_ms": 10000,
+            # Kafka connection settings
+            "topic_name": KAFKA_TOPIC,
+            "group_id": KAFKA_CONSUMER_GROUP,
+            "replication_factor": replication_factor,
             "security_protocol": self.context.kafka.security_protocol,
             "ssl_cafile": self.workload.paths.ssl_cafile
             if self.context.cluster.tls_enabled
@@ -69,6 +74,7 @@ class ConfigManager:
             "sasl_mechanism": "SCRAM-SHA-512",
             "sasl_plain_username": self.context.kafka.username,
             "sasl_plain_password": self.context.kafka.password,
+            # Auth options
             "registry_authfile": self.workload.paths.registry_authfile,
             "registry_ca": None,
         }

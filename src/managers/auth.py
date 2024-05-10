@@ -179,3 +179,11 @@ class KarapaceAuth:
         self.write_authfile()
 
         self.context.cluster.update({f"{ADMIN_USER}-password": admin_password})
+
+    def update_admin_user(self) -> None:
+        """Updates credentials based on current charm information."""
+        for user, password in self.context.cluster.internal_user_credentials.items():
+            self.add_user(username=user, password=password, replace=True)
+            self.add_acl(username=user, subject=".*", role="admin")
+
+        self.write_authfile()
