@@ -102,3 +102,28 @@ async def test_scale_up_kafka(ops_test: OpsTest):
 
     # Schema added on the previous test, checks that karapace is still working
     assert await assert_list_schemas(ops_test, expected_schemas="[test-key]")
+
+
+@pytest.mark.abort_on_fail
+async def test_scale_up(ops_test: OpsTest):
+    """Scale up Karapace charm."""
+    await ops_test.model.applications[APP_NAME].add_units(count=2)
+    await ops_test.model.wait_for_idle(apps=[KAFKA, APP_NAME])
+
+    assert ops_test.model.applications[APP_NAME].status == "active"
+
+    # Schema added on the previous test, checks that karapace is still working
+    assert await assert_list_schemas(ops_test, expected_schemas="[test-key]")
+
+
+@pytest.mark.abort_on_fail
+async def test_scale_down(ops_test: OpsTest):
+    """Scale up Karapace charm."""
+    await ops_test.model.applications[APP_NAME].destroy_units(f"{APP_NAME}/1")
+    await ops_test.model.applications[APP_NAME].destroy_units(f"{APP_NAME}/2")
+    await ops_test.model.wait_for_idle(apps=[KAFKA, APP_NAME], wait_for_exact_units=1)
+
+    assert ops_test.model.applications[APP_NAME].status == "active"
+
+    # Schema added on the previous test, checks that karapace is still working
+    assert await assert_list_schemas(ops_test, expected_schemas="[test-key]")
