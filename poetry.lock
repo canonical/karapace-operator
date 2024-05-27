@@ -375,6 +375,23 @@ files = [
 ]
 
 [[package]]
+name = "cosl"
+version = "0.0.11"
+description = "Utils for COS Lite charms"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "cosl-0.0.11-py3-none-any.whl", hash = "sha256:46d78d6441ba628bae386cd8c10b8144558ab208115522020e7858f97837988d"},
+    {file = "cosl-0.0.11.tar.gz", hash = "sha256:15cac6ed20b65e9d33cda3c3da32e299c82f9feea64e393448cd3d3cf2bef32a"},
+]
+
+[package.dependencies]
+ops = "*"
+pyyaml = "*"
+typing-extensions = "*"
+
+[[package]]
 name = "coverage"
 version = "7.4.4"
 description = "Code coverage measurement for Python"
@@ -1479,6 +1496,7 @@ url = "https://github.com/canonical/data-platform-workflows"
 reference = "v7"
 resolved_reference = "9ab9063d00a9b80b87b30f8d6f33a71b92702574"
 subdirectory = "python/pytest_plugins/pytest_operator_cache"
+
 [[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
@@ -2054,4 +2072,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "3d710936499ce4e6a7f2177abdc3e3e155c8c634ef9ffd3ae629079f5dffaa8a"
+content-hash = "308d88127ecf35a25b1955a46f04c2aae2f1ee6e09becead8b9fffaaa040c990"

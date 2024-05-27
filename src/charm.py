@@ -8,6 +8,7 @@ import logging
 
 import ops
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
+from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.rolling_ops.v0.rollingops import RollingOpsManager
 
 from core.cluster import ClusterContext
@@ -56,6 +57,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         # LIB HANDLERS
 
         self.restart = RollingOpsManager(self, relation="restart", callback=self._restart)
+        self._grafana_agent = COSAgentProvider(self)
 
         # CORE EVENTS
 

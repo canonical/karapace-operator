@@ -39,3 +39,5 @@ requires:
 provides:
   karapace:
     interface: karapace_client
+  cos-agent:
+    interface: cos_agent
