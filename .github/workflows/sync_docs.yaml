@@ -6,6 +6,7 @@ on:
     - cron: '53 0 * * *' # Daily at 00:53 UTC
   # Triggered on push to branch "main" by .github/workflows/release.yaml
   workflow_call:
+  pull_request:
 
 jobs:
   sync-docs:
@@ -14,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Open PR with docs changes
-        uses: deusebio/discourse-gatekeeper@main
+        uses: canonical/discourse-gatekeeper@main
         id: docs-pr
         with:
           discourse_host: discourse.charmhub.io
