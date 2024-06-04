@@ -7,7 +7,7 @@ description: |
   Karapace is a solution to store schemas. These schemas can be used to serialize/deserialize
   messages on Kafka.
 summary: Charmed Karapace Operator
-# docs: https://discourse.charmhub.io/t/charmed-kafka-documentation/10288
+docs: https://discourse.charmhub.io/t/charmed-karapace-documentation/14178
 source: https://github.com/canonical/karapace-operator
 issues: https://github.com/canonical/karapace-operator/issues
 website:

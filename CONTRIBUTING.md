@@ -1,6 +1,61 @@
 # Contributing
 
-To make contributions to this charm, you'll need a working [development setup](https://juju.is/docs/sdk/dev-setup).
+## Overview
+
+This documents explains the processes and practices recommended for contributing enhancements to this operator.
+
+- Generally, before developing enhancements to this charm, you should consider [opening an issue](https://github.com/canonical/karapace-operator/issues) explaining your problem with examples, and your desired use case.
+- If you would like to chat with us about your use-cases or proposed implementation, you can reach us at [Canonical Matrix public channel](https://matrix.to/#/#charmhub-data-platform:ubuntu.com) or [Discourse](https://discourse.charmhub.io/).
+- Familiarising yourself with the [Charmed Operator Framework](https://juju.is/docs/sdk) library will help you a lot when working on new features or bug fixes.
+- All enhancements require review before being merged. Code review typically examines
+  - code quality
+  - test coverage
+  - user experience for Juju administrators of this charm.
+- Please help us out in ensuring easy to review branches by rebasing your pull request branch onto the `main` branch. This also avoids merge commits and creates a linear Git commit history.
+
+## Requirements
+
+To build the charm locally, you will need to install [Charmcraft](https://juju.is/docs/sdk/install-charmcraft).
+
+To run the charm locally with Juju, it is recommended to use [LXD](https://linuxcontainers.org/lxd/introduction/) as your virtual machine manager. Instructions for running Juju on LXD can be found [here](https://juju.is/docs/olm/lxd).
+
+## Build and Deploy
+
+To build the charm in this repository, from the root of the dir you can run:
+
+### Deploy
+
+```bash
+# Clone and enter the repository
+git clone https://github.com/canonical/karapace-operator.git
+cd karapace-operator/
+
+# Create a working model
+juju add-model karapace
+
+# Enable DEBUG logging for the model
+juju model-config logging-config="<root>=INFO;unit=DEBUG"
+
+# Build the charm locally
+charmcraft pack
+
+# Deploy the latest ZooKeeper release
+juju deploy zookeeper --channel edge
+
+# Deploy the latest Kafka release
+juju deploy kafka --channel edge
+
+# Deploy the charm
+juju deploy ./*.charm
+
+# Integrate Kafka and ZooKeeper
+juju integrate kafka zookeeper
+
+# Integrate with Karapace
+juju integrate karapace kafka
+```
+
+## Developing
 
 You can create an environment for development with `tox`:
 
@@ -9,26 +64,16 @@ tox devenv -e integration
 source venv/bin/activate
 ```
 
-## Testing
-
-This project uses `tox` for managing test environments. There are some pre-configured environments
-that can be used for linting and formatting code when you're preparing contributions to the charm:
+### Testing
 
 ```shell
 tox run -e format        # update your code according to linting rules
 tox run -e lint          # code style
-tox run -e static        # static type checking
 tox run -e unit          # unit tests
 tox run -e integration   # integration tests
-tox                      # runs 'format', 'lint', 'static', and 'unit' environments
+tox                      # runs 'lint' and 'unit' environments
 ```
 
-## Build the charm
+## Canonical Contributor Agreement
 
-Build the charm in this git repository using:
-
-```shell
-charmcraft pack
-```
-
-<!-- You may want to include any contribution/style guidelines in this document>
+Canonical welcomes contributions to the Charmed Karapace Operator. Please check out our [contributor agreement](https://ubuntu.com/legal/contributors) if you're interested in contributing to the solution.
