@@ -68,7 +68,7 @@ class PasswordActionEvents(Object):
         self.charm.auth_manager.write_authfile()
 
         # Restart needed to apply changes
-        self.charm.on[f"{self.charm.restart.name}"].acquire_lock.emit()
+        self.charm.workload.restart()
 
         # Store the password on application databag
         self.charm.context.cluster.relation_data.update({f"{username}-password": new_password})
