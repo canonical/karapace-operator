@@ -70,7 +70,7 @@ class KarapaceHandler(Object):
         self.karapace_provider.set_subject(relation.id, subject)
 
         # Restart needed to apply changes to auth
-        self.charm.on[f"{self.charm.restart.name}"].acquire_lock.emit()
+        self.charm.workload.restart()
 
     def _on_relation_broken(self, event: RelationBrokenEvent):
         """Handle relation broken event."""
@@ -92,4 +92,4 @@ class KarapaceHandler(Object):
             self.charm.context.cluster.update({username: ""})
 
             # Restart needed to apply changes to auth
-            self.charm.on[f"{self.charm.restart.name}"].acquire_lock.emit()
+            self.charm.workload.restart()

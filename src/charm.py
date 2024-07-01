@@ -9,7 +9,6 @@ import logging
 import ops
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
-from charms.rolling_ops.v0.rollingops import RollingOpsManager
 
 from core.cluster import ClusterContext
 from core.structured_config import CharmConfig
@@ -56,7 +55,6 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         # LIB HANDLERS
 
-        self.restart = RollingOpsManager(self, relation="restart", callback=self._restart)
         self._grafana_agent = COSAgentProvider(self)
 
         # CORE EVENTS
@@ -110,11 +108,11 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             self.config_manager.generate_config()
 
             # Restart so changes take effect
-            self.on[f"{self.restart.name}"].acquire_lock.emit()
+            self.workload.restart()
 
         self.unit.status = ops.ActiveStatus()
 
-    def _on_update_status(self, event: ops.UpdateStatusEvent):
+    def _on_update_status(self, _: ops.UpdateStatusEvent):
         """Handle update status."""
         if not self.healthy:
             return
@@ -124,20 +122,6 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             return
 
         self.on.config_changed.emit()
-
-    def _restart(self, _: ops.EventBase) -> None:
-        """Handler for emitted restart events."""
-        # only attempt restart if service is already active
-        if not self.healthy:
-            # event.defer()
-            return
-
-        self.workload.restart()
-
-        if self.workload.active():
-            logger.info(f"{self.unit.name} restarted")
-        else:
-            logger.error(f"{self.unit.name} failed to restart")
 
     @property
     def healthy(self) -> bool:

@@ -48,7 +48,7 @@ class KafkaHandler(Object):
         logger.info(f"Bootstrap servers changed into: {event.bootstrap_server}")
         self.charm.on.config_changed.emit()
 
-    def _on_kafka_topic_created(self, event: TopicCreatedEvent) -> None:
+    def _on_kafka_topic_created(self, _: TopicCreatedEvent) -> None:
         """Handle the topic created event."""
         self.charm.config_manager.generate_config()
         self.charm.workload.start()
