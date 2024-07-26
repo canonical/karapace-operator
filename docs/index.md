@@ -1,6 +1,6 @@
-# Charmed Karapace Documentation
+# Charmed Karapace documentation
 
-The Charmed Karapace Operator delivers automated operations management from day 0 to day 2 on [Karapace](https://www.karapace.io/).
+The Charmed Karapace Operator delivers automated operations management from [Day 0 to Day 2](https://codilime.com/blog/day-0-day-1-day-2-the-software-lifecycle-in-the-cloud-age/) on [Karapace](https://www.karapace.io/).
 
 Karapace provides an open source alternative to Confluent's [Schema Registry](https://docs.confluent.io/platform/current/schema-registry/index.html#sr-overview). It is a solution to enforce data validation, consistency, serialization/deserialization... It is used as an additional service by producers/consumers to support data operations.
 
