@@ -28,8 +28,8 @@ class RelationState:
         self,
         relation: Relation | None,
         data_interface: Data,
-        component: Unit | Application,
-        substrate: Substrate,
+        component: Unit | Application | None,
+        substrate: Substrate | None = None,
     ):
         self.relation = relation
         self.data_interface = data_interface
@@ -261,3 +261,30 @@ class Kafka(RelationState):
             return False
 
         return True
+
+
+class KarapaceClient(RelationState):
+    """State collection metadata for a single related client application."""
+
+    def __init__(self, relation: Relation | None, data_interface: Data, component: Application):
+        super().__init__(relation, data_interface, component, None)
+        self.app = component
+
+    @property
+    def username(self) -> str:
+        """The generated username for the client application."""
+        return f"relation-{getattr(self.relation, 'id', '')}"
+
+    @property
+    def subject(self) -> str:
+        """The ZooKeeper connection endpoints for the client application to connect with."""
+        return self.relation_data.get("subject", "")
+
+    @property
+    def extra_user_roles(self) -> str:
+        """The client defined roles for their application.
+
+        Can be any comma-delimited selection of `producer`, `consumer` and `admin`.
+        When `admin` is set, the Kafka charm interprets this as a new super.user.
+        """
+        return self.relation_data.get("extra-user-roles", "")
