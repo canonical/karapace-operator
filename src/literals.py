@@ -25,6 +25,7 @@ KAFKA_CONSUMER_GROUP = "schema-registry"
 
 ADMIN_USER = "operator"
 INTERNAL_USERS = [ADMIN_USER]
+SALT = "placeholder"
 
 SECRETS_APP = ["operator-password"]
 SECRETS_UNIT = ["ca-cert", "csr", "certificate", "private-key"]

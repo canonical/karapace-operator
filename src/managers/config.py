@@ -20,7 +20,7 @@ class ConfigManager:
 
     @property
     def parsed_confile(self) -> dict:
-        """Return authfile parsed as a dict."""
+        """Return config file parsed as a dict."""
         raw_file = self.workload.read(self.workload.paths.karapace_config)
         if not raw_file:
             return {}

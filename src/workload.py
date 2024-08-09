@@ -14,7 +14,7 @@ from tenacity import retry, retry_if_result, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
 from core.workload import WorkloadBase
-from literals import CHARMED_KARAPACE_SNAP_REVISION, GROUP, SNAP_NAME, USER
+from literals import CHARMED_KARAPACE_SNAP_REVISION, GROUP, SALT, SNAP_NAME, USER
 
 logger = logging.getLogger(__name__)
 
@@ -124,4 +124,4 @@ class KarapaceWorkload(WorkloadBase):
 
     @override
     def mkpasswd(self, username: str, password: str) -> str:
-        return self.exec(command=f"{SNAP_NAME}.mkpasswd -u {username} -a sha512 {password}")
+        return self.exec(command=f"{SNAP_NAME}.mkpasswd -u {username} -a sha512 {password} {SALT}")
