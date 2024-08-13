@@ -22,7 +22,9 @@ async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
 
     await asyncio.gather(
         ops_test.model.deploy(karapace_charm, application_name=APP_NAME, series="jammy"),
-        ops_test.model.deploy(TLS_NAME, channel="edge", config=tls_config, series="jammy"),
+        ops_test.model.deploy(
+            TLS_NAME, channel="edge", config=tls_config, series="jammy", revision=163
+        ),
         ops_test.model.deploy(
             ZOOKEEPER, channel="3/edge", series="jammy", application_name=ZOOKEEPER
         ),

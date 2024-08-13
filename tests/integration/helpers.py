@@ -20,7 +20,6 @@ APP_NAME = METADATA["name"]
 
 KAFKA = "kafka"
 ZOOKEEPER = "zookeeper"
-DATA_INTEGRATOR = "data-integrator"
 TLS_CERTIFICATES_OPERATOR = "tls-certificates-operator"
 DUMMY_NAME = "app"
 
@@ -49,12 +48,12 @@ async def set_password(ops_test: OpsTest, username="operator", password=None, nu
     return password.results
 
 
-async def get_data_integrator_credentials(ops_test: OpsTest, num_unit=0) -> dict[str, str]:
-    action = await ops_test.model.units.get(f"{DATA_INTEGRATOR}/{num_unit}").run_action(
-        "get-credentials"
+async def get_application_credentials(ops_test: OpsTest, role="user") -> tuple[str, str]:
+    action = await ops_test.model.units.get(f"{DUMMY_NAME}/0").run_action(
+        "get-credentials", **{"username": role}
     )
     credentials = await action.wait()
-    return credentials.results["kafka"]
+    return credentials.results["username"], credentials.results["password"]
 
 
 async def set_tls_private_key(ops_test: OpsTest, key: str | None = None, num_unit=0):

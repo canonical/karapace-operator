@@ -202,9 +202,14 @@ class KarapaceAuth:
 
         for client in self.context.clients:
             role = "admin" if client.username in super_users else "user"
+            password = self.context.cluster.client_passwords.get(client.username)
+            # NOTE: password might not be set yet when calling this method
+            if not password:
+                continue
+
             self.add_user(
                 username=client.username,
-                password=self.context.cluster.client_passwords[client.username],
+                password=password,
                 replace=True,
             )
             self.add_acl(username=client.username, subject=client.subject, role=role)
