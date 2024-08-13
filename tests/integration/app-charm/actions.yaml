@@ -1,0 +1,11 @@
+
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+get-credentials:
+  description: Get user credentials
+  params:
+    username:
+      type: string
+      description: The internal username to get password for
+      enum: [admin, user]
+  required: [username]
