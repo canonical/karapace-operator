@@ -277,14 +277,13 @@ class KarapaceClient(RelationState):
 
     @property
     def subject(self) -> str:
-        """The ZooKeeper connection endpoints for the client application to connect with."""
+        """The subject a client application is requesting access to."""
         return self.relation_data.get("subject", "")
 
     @property
     def extra_user_roles(self) -> str:
         """The client defined roles for their application.
 
-        Can be any comma-delimited selection of `producer`, `consumer` and `admin`.
-        When `admin` is set, the Kafka charm interprets this as a new super.user.
+        Can be any comma-delimited selection of `user` or `admin`.
         """
         return self.relation_data.get("extra-user-roles", "")
