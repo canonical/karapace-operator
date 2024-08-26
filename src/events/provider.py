@@ -41,9 +41,6 @@ class KarapaceHandler(Object):
             event.defer()
             return
 
-        if not self.charm.unit.is_leader():
-            return
-
         relation = event.relation
         username = f"relation-{relation.id}"
         password = self.charm.context.cluster.client_passwords.get(username, "")
@@ -52,7 +49,7 @@ class KarapaceHandler(Object):
         # leader creates the password.
         if not password and self.charm.unit.is_leader():
             password = self.charm.workload.generate_password()
-        if not password and not self.charm.unit.is_leader():
+        elif not password:
             event.defer()
             return
 

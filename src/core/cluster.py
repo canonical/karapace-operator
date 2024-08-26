@@ -165,7 +165,7 @@ class ClusterContext(Object):
         """Generates all users with super/admin permissions for the cluster from relations.
 
         Returns:
-            set of current super users
+            Set of current super users
         """
         super_users = set(INTERNAL_USERS)
         for relation in self.karapace_relations:
