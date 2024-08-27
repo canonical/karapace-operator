@@ -12,7 +12,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from ops import Framework, Object, Relation, Unit
 
-from core.models import Kafka, KarapaceCluster, KarapaceServer
+from core.models import Kafka, KarapaceClient, KarapaceCluster, KarapaceServer
 from literals import (
     INTERNAL_USERS,
     KAFKA_CONSUMER_GROUP,
@@ -25,6 +25,7 @@ from literals import (
     Status,
     Substrate,
 )
+from relations.karapace import KarapaceProvidesData
 
 
 class ClusterContext(Object):
@@ -45,6 +46,10 @@ class ClusterContext(Object):
             topic=KAFKA_TOPIC,
             extra_user_roles="admin",
             consumer_group_prefix=KAFKA_CONSUMER_GROUP,
+        )
+
+        self.client_provider_interface = KarapaceProvidesData(
+            self.model, relation_name=KARAPACE_REL
         )
 
         self._servers_data = {}
@@ -134,16 +139,33 @@ class ClusterContext(Object):
             substrate=self.substrate,
         )
 
+    @property
+    def clients(self) -> set[KarapaceClient]:
+        """All connected client applications."""
+        clients = set()
+
+        for relation in self.karapace_relations:
+            if not relation.app:
+                continue
+
+            clients.add(
+                KarapaceClient(
+                    relation=relation,
+                    data_interface=self.client_provider_interface,
+                    component=relation.app,
+                )
+            )
+
+        return clients
+
     # --- ADDITIONAL METHODS ---
 
     @property
-    def super_users(self) -> str:
+    def super_users(self) -> set[str]:
         """Generates all users with super/admin permissions for the cluster from relations.
 
-        Formatting allows passing to the `super.users` property.
-
         Returns:
-            Semicolon delimited string of current super users
+            Set of current super users
         """
         super_users = set(INTERNAL_USERS)
         for relation in self.karapace_relations:
@@ -156,9 +178,7 @@ class ClusterContext(Object):
             if "admin" in extra_user_roles and password:
                 super_users.add(f"relation-{relation.id}")
 
-        super_users_arg = sorted([f"User:{user}" for user in super_users])
-
-        return ";".join(super_users_arg)
+        return super_users
 
     @property
     def endpoints(self) -> str:

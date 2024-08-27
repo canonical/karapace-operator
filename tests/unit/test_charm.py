@@ -142,8 +142,14 @@ def test_ready_to_start_no_internal_credentials(
 
 
 def test_config_changed_succeeds(
-    ctx: Context, peer_relation, kafka_relation, patched_workload_write, patched_restart
+    ctx: Context,
+    peer_relation,
+    kafka_relation,
+    patched_workload_write,
+    patched_restart,
+    patched_exec,
 ):
+    patched_exec.side_effect = patched_exec_side_effects
     state_in = State(relations=[peer_relation, kafka_relation], leader=True)
     state_out = ctx.run("config_changed", state_in)
 
@@ -171,8 +177,14 @@ def test_update_status_blocks_if_kafka_not_connected(ctx: Context, peer_relation
 
 
 def test_update_status_succeeds(
-    ctx: Context, peer_relation, kafka_relation, patched_workload_write, patched_restart
+    ctx: Context,
+    peer_relation,
+    kafka_relation,
+    patched_workload_write,
+    patched_restart,
+    patched_exec,
 ):
+    patched_exec.side_effect = patched_exec_side_effects
     state_in = State(relations=[peer_relation, kafka_relation], leader=True)
     with (
         patch("managers.kafka.KafkaManager.brokers_active", return_value=True),

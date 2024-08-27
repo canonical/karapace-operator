@@ -70,6 +70,15 @@ class KarapaceAuth:
         # Load current users and ACLs to have an internal mapping of auth state.
         self._load_authfile()
 
+    @property
+    def parsed_authfile(self) -> dict:
+        """Return auth file parsed as a dict."""
+        raw_file = self.workload.read(self.workload.paths.registry_authfile)
+        if not raw_file:
+            return {}
+
+        return json.loads("\n".join(raw_file))
+
     def _load_authfile(self) -> None:
         """Load current Karapace authfile.
 
@@ -97,10 +106,9 @@ class KarapaceAuth:
         # Internal state of auth to the class
         self.auth_dict: dict[str, AuthDictEntry] = {}
 
-        raw_file = self.workload.read(self.workload.paths.registry_authfile)
-        if not raw_file:
+        authfile = self.parsed_authfile
+        if not authfile:
             return
-        authfile = json.loads("\n".join(raw_file))
 
         users = [UserCredentials(**user) for user in authfile["users"]]
         acls = [Acl(**acl) for acl in authfile["permissions"]]
@@ -181,9 +189,29 @@ class KarapaceAuth:
         self.context.cluster.update({f"{ADMIN_USER}-password": admin_password})
 
     def update_admin_user(self) -> None:
-        """Updates credentials based on current charm information."""
+        """Updates admin credentials based on current charm information."""
         for user, password in self.context.cluster.internal_user_credentials.items():
             self.add_user(username=user, password=password, replace=True)
             self.add_acl(username=user, subject=".*", role="admin")
+
+        self.write_authfile()
+
+    def update_client_users(self) -> None:
+        """Updates credentials based on current charm information."""
+        super_users = self.context.super_users
+
+        for client in self.context.clients:
+            role = "admin" if client.username in super_users else "user"
+            password = self.context.cluster.client_passwords.get(client.username)
+            # NOTE: password might not be set yet when calling this method
+            if not password:
+                continue
+
+            self.add_user(
+                username=client.username,
+                password=password,
+                replace=True,
+            )
+            self.add_acl(username=client.username, subject=client.subject, role=role)
 
         self.write_authfile()

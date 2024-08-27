@@ -41,17 +41,20 @@ class KarapaceHandler(Object):
             event.defer()
             return
 
-        if not self.charm.unit.is_leader():
+        relation = event.relation
+        username = f"relation-{relation.id}"
+        password = self.charm.context.cluster.client_passwords.get(username, "")
+
+        # All units can update their own authfile. If password is not yet set, wait until
+        # leader creates the password.
+        if not password and self.charm.unit.is_leader():
+            password = self.charm.workload.generate_password()
+        elif not password:
+            event.defer()
             return
 
         extra_user_roles = event.extra_user_roles or ""
         subject = event.subject or ""
-        relation = event.relation
-        username = f"relation-{relation.id}"
-        password = (
-            self.charm.context.cluster.client_passwords.get(username)
-            or self.charm.workload.generate_password()
-        )
         endpoints = self.charm.context.endpoints
         tls = "enabled" if self.charm.context.cluster.tls_enabled else "disabled"
 
@@ -59,23 +62,21 @@ class KarapaceHandler(Object):
         self.charm.auth_manager.add_acl(username=username, subject=subject, role=extra_user_roles)
         self.charm.auth_manager.write_authfile()
 
-        # non-leader units need cluster_config_changed event to update their super.users
-        self.charm.context.cluster.update(
-            {username: password, "super-users": self.charm.context.super_users}
-        )
+        # non-leader units need cluster_config_changed event to update their authfiles
+        if self.charm.unit.is_leader():
+            self.charm.context.cluster.update(
+                {username: password, "super-users": str(self.charm.context.super_users)}
+            )
 
-        self.karapace_provider.set_endpoint(relation.id, endpoints)
-        self.karapace_provider.set_credentials(relation.id, username, password)
-        self.karapace_provider.set_tls(relation.id, tls)
-        self.karapace_provider.set_subject(relation.id, subject)
-
-        # Restart needed to apply changes to auth
-        self.charm.workload.restart()
+            self.karapace_provider.set_endpoint(relation.id, endpoints)
+            self.karapace_provider.set_credentials(relation.id, username, password)
+            self.karapace_provider.set_tls(relation.id, tls)
+            self.karapace_provider.set_subject(relation.id, subject)
 
     def _on_relation_broken(self, event: RelationBrokenEvent):
         """Handle relation broken event."""
         # don't remove anything if app is going down
-        if not self.charm.unit.is_leader() or self.charm.app.planned_units == 0:
+        if self.charm.app.planned_units == 0:
             return
 
         if not self.charm.healthy:
@@ -87,9 +88,7 @@ class KarapaceHandler(Object):
             self.charm.auth_manager.remove_user(username=username)
             self.charm.auth_manager.write_authfile()
 
-            # non-leader units need cluster_config_changed event to update their super.users
-            # update on the peer relation data will trigger an update of server properties on all units
-            self.charm.context.cluster.update({username: ""})
-
-            # Restart needed to apply changes to auth
-            self.charm.workload.restart()
+            if self.charm.unit.is_leader():
+                # update on the peer relation data will trigger an update of server properties
+                # on all units
+                self.charm.context.cluster.update({username: ""})

@@ -4,10 +4,21 @@
 
 import asyncio
 import logging
+from subprocess import PIPE, check_output
 
 import pytest
-from helpers import APP_NAME, DUMMY_NAME, KAFKA, ZOOKEEPER
+from helpers import (
+    APP_NAME,
+    DUMMY_NAME,
+    KAFKA,
+    ZOOKEEPER,
+    assert_list_schemas,
+    get_address,
+    get_application_credentials,
+)
 from pytest_operator.plugin import OpsTest
+
+from literals import PORT
 
 logger = logging.getLogger(__name__)
 
@@ -45,3 +56,56 @@ async def test_relate_requirer(ops_test: OpsTest):
 
     assert ops_test.model.applications[APP_NAME].status == "active"
     assert ops_test.model.applications[DUMMY_NAME].status == "active"
+
+    admin_username, admin_password = await get_application_credentials(ops_test, role="admin")
+    address = await get_address(ops_test=ops_test)
+    command = " ".join(
+        [
+            "curl",
+            "-u",
+            f"{admin_username}:{admin_password}",
+            "-X",
+            "POST",
+            "-H",
+            '"Content-Type: application/vnd.schemaregistry.v1+json"',
+            "--data",
+            '\'{"schema": "{\\"type\\": \\"record\\", \\"name\\": \\"Obj\\", \\"fields\\":[{\\"name\\": \\"age\\", \\"type\\": \\"int\\"}]}"}\'',
+            f"http://{address}:{PORT}/subjects/other-key/versions",
+        ]
+    )
+
+    result = check_output(command, stderr=PIPE, shell=True, universal_newlines=True)
+    assert '{"id":1}' in result
+
+    await assert_list_schemas(ops_test, expected_schemas='["other-key"]')
+
+
+@pytest.mark.abort_on_fail
+async def test_scaling_karapace_with_requirer(ops_test: OpsTest):
+    await ops_test.model.applications[APP_NAME].add_units(count=2)
+    await ops_test.model.wait_for_idle(apps=[KAFKA, APP_NAME])
+
+    assert ops_test.model.applications[APP_NAME].status == "active"
+
+    # Add a second schema using the API on a different unit from the scaled app
+    admin_username, admin_password = await get_application_credentials(ops_test, role="admin")
+    address = await get_address(ops_test=ops_test, unit_num=2)
+    command = " ".join(
+        [
+            "curl",
+            "-u",
+            f"{admin_username}:{admin_password}",
+            "-X",
+            "POST",
+            "-H",
+            '"Content-Type: application/vnd.schemaregistry.v1+json"',
+            "--data",
+            '\'{"schema": "{\\"type\\": \\"record\\", \\"name\\": \\"Obj\\", \\"fields\\":[{\\"name\\": \\"age\\", \\"type\\": \\"int\\"}]}"}\'',
+            f"http://{address}:{PORT}/subjects/second-key/versions",
+        ]
+    )
+
+    result = check_output(command, stderr=PIPE, shell=True, universal_newlines=True)
+    assert '{"id":1}' in result
+
+    await assert_list_schemas(ops_test, expected_schemas='["other-key","second-key"]', units=3)

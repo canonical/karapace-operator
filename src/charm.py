@@ -95,7 +95,8 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         # Load current properties set in the charm workload
         rendered_file = self.config_manager.parsed_confile
-        if rendered_file != self.config_manager.config:
+        config_changed = rendered_file != self.config_manager.config
+        if config_changed:
             logger.info(
                 (
                     f'Server {self.unit.name.split("/")[1]} updating config - '
@@ -107,6 +108,10 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             # Config is different, apply changes to file
             self.config_manager.generate_config()
 
+        self.auth_manager.update_client_users()
+        self.auth_manager.update_admin_user()
+
+        if config_changed:
             # Restart so changes take effect
             self.workload.restart()
 

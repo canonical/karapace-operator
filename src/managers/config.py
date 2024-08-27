@@ -8,7 +8,7 @@ import json
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import KAFKA_CONSUMER_GROUP, KAFKA_TOPIC, PORT, REPLICATION_PORT
+from literals import KAFKA_CONSUMER_GROUP, KAFKA_TOPIC, PORT
 
 
 class ConfigManager:
@@ -20,7 +20,7 @@ class ConfigManager:
 
     @property
     def parsed_confile(self) -> dict:
-        """Return authfile parsed as a dict."""
+        """Return config file parsed as a dict."""
         raw_file = self.workload.read(self.workload.paths.karapace_config)
         if not raw_file:
             return {}
@@ -41,7 +41,7 @@ class ConfigManager:
             # Replication properties
             "advertised_hostname": self.context.server.host,
             "advertised_protocol": "http",
-            "advertised_port": REPLICATION_PORT,
+            "advertised_port": None,
             "client_id": f"sr-{self.context.server.unit_id}",
             "master_eligibility": True,
             # REST server options
