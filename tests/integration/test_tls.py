@@ -43,7 +43,7 @@ async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
     await ops_test.model.add_relation(KAFKA, ZOOKEEPER)
     await ops_test.model.add_relation(TLS_NAME, ZOOKEEPER)
     await ops_test.model.add_relation(TLS_NAME, f"{KAFKA}:certificates")
-    
+
     async with ops_test.fast_forward(fast_interval="60s"):
         await ops_test.model.wait_for_idle(
             apps=[TLS_NAME, ZOOKEEPER, KAFKA], idle_period=25, timeout=1800, status="active"
