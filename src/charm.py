@@ -108,12 +108,10 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             # Config is different, apply changes to file
             self.config_manager.generate_config()
 
-        auth_changed = self.auth_manager.parsed_authfile != self.auth_manager.auth_dict
-        if auth_changed:
-            self.auth_manager.update_client_users()
-            self.auth_manager.update_admin_user()
+        self.auth_manager.update_client_users()
+        self.auth_manager.update_admin_user()
 
-        if auth_changed or config_changed:
+        if config_changed:
             # Restart so changes take effect
             self.workload.restart()
 

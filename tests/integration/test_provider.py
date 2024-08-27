@@ -108,4 +108,4 @@ async def test_scaling_karapace_with_requirer(ops_test: OpsTest):
     result = check_output(command, stderr=PIPE, shell=True, universal_newlines=True)
     assert '{"id":1}' in result
 
-    await assert_list_schemas(ops_test, expected_schemas='["other-key","second-key"]')
+    await assert_list_schemas(ops_test, expected_schemas='["other-key","second-key"]', units=3)

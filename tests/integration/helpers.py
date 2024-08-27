@@ -78,21 +78,24 @@ def check_socket(host: str, port: int) -> bool:
         return sock.connect_ex((host, port)) == 0
 
 
-async def assert_list_schemas(ops_test: OpsTest, expected_schemas: str = "[]") -> None:
+async def assert_list_schemas(
+    ops_test: OpsTest, expected_schemas: str = "[]", units: int = 1
+) -> None:
     """Assert schemas can be listed."""
     operator_password = await get_admin_credentials(ops_test)
-    address = await get_address(ops_test=ops_test)
-    command = " ".join(
-        [
-            "curl",
-            "-u",
-            f"operator:{operator_password}",
-            "-X",
-            "GET",
-            f"http://{address}:{PORT}/subjects",
-        ]
-    )
+    for i in range(units):
+        address = await get_address(ops_test=ops_test, unit_num=i)
+        command = " ".join(
+            [
+                "curl",
+                "-u",
+                f"operator:{operator_password}",
+                "-X",
+                "GET",
+                f"http://{address}:{PORT}/subjects",
+            ]
+        )
 
-    logger.info("Requesting schemas")
-    result = check_output(command, stderr=PIPE, shell=True, universal_newlines=True)
-    assert expected_schemas in result
+        logger.info("Requesting schemas")
+        result = check_output(command, stderr=PIPE, shell=True, universal_newlines=True)
+        assert expected_schemas in result

@@ -8,7 +8,7 @@ import json
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import KAFKA_CONSUMER_GROUP, KAFKA_TOPIC, PORT, REPLICATION_PORT
+from literals import KAFKA_CONSUMER_GROUP, KAFKA_TOPIC, PORT
 
 
 class ConfigManager:
@@ -41,7 +41,7 @@ class ConfigManager:
             # Replication properties
             "advertised_hostname": self.context.server.host,
             "advertised_protocol": "http",
-            "advertised_port": REPLICATION_PORT,
+            "advertised_port": None,
             "client_id": f"sr-{self.context.server.unit_id}",
             "master_eligibility": True,
             # REST server options

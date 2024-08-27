@@ -91,7 +91,6 @@ def test_subject_requested(
     requirer_relation,
     patched_workload_write,
     patched_exec,
-    patched_restart,
 ):
     patched_exec.side_effect = patched_exec_side_effects
     patched_workload_write.side_effect = patched_write_side_effects
@@ -101,7 +100,6 @@ def test_subject_requested(
 
     # NOTE side_effect of patched write will already assert expected output as well
     patched_workload_write.assert_called_once()
-    patched_restart.assert_called_once()
 
     assert state_out.get_relations("cluster")[0].local_app_data.get("relation-5000")
 
@@ -126,7 +124,6 @@ def test_relation_broken(
     kafka_relation,
     requirer_relation,
     patched_workload_write,
-    patched_restart,
 ):
     state_in = State(
         relations=[peer_relation_with_provider, kafka_relation, requirer_relation], leader=True
@@ -135,7 +132,6 @@ def test_relation_broken(
         state_out = ctx.run(requirer_relation.broken_event, state_in)
 
     patched_workload_write.assert_called_once()
-    patched_restart.assert_called_once()
 
     # Assert user gets removed from databag as well
     assert not state_out.get_relations("cluster")[0].local_app_data.get("relation-5000")

@@ -73,9 +73,6 @@ class KarapaceHandler(Object):
             self.karapace_provider.set_tls(relation.id, tls)
             self.karapace_provider.set_subject(relation.id, subject)
 
-        # Restart needed to apply changes to auth
-        self.charm.workload.restart()
-
     def _on_relation_broken(self, event: RelationBrokenEvent):
         """Handle relation broken event."""
         # don't remove anything if app is going down
@@ -95,6 +92,3 @@ class KarapaceHandler(Object):
                 # update on the peer relation data will trigger an update of server properties
                 # on all units
                 self.charm.context.cluster.update({username: ""})
-
-            # Restart needed to apply changes to auth
-            self.charm.workload.restart()

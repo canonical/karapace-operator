@@ -67,9 +67,6 @@ class PasswordActionEvents(Object):
         self.charm.auth_manager.add_acl(username=username, role="admin")
         self.charm.auth_manager.write_authfile()
 
-        # Restart needed to apply changes
-        self.charm.workload.restart()
-
         # Store the password on application databag
         self.charm.context.cluster.relation_data.update({f"{username}-password": new_password})
         event.set_results({f"{username}-password": new_password})

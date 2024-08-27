@@ -15,7 +15,6 @@ SNAP_NAME = "charmed-karapace"
 CHARMED_KARAPACE_SNAP_REVISION = 2
 CONTAINER = "karapace"
 PORT = 8081
-REPLICATION_PORT = 8082
 
 PEER = "cluster"
 KARAPACE_REL = "karapace"

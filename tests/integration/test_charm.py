@@ -115,7 +115,7 @@ async def test_scale_up(ops_test: OpsTest):
     assert ops_test.model.applications[APP_NAME].status == "active"
 
     # Schema added on the previous test, checks that karapace is still working
-    await assert_list_schemas(ops_test, expected_schemas='["test-key"]')
+    await assert_list_schemas(ops_test, expected_schemas='["test-key"]', units=3)
 
 
 @pytest.mark.abort_on_fail
