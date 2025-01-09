@@ -26,9 +26,9 @@ async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
             TLS_NAME, channel="edge", config=tls_config, series="jammy", revision=163
         ),
         ops_test.model.deploy(
-            ZOOKEEPER, channel="3/edge", series="jammy", application_name=ZOOKEEPER
+            ZOOKEEPER, channel="3/stable", series="jammy", application_name=ZOOKEEPER
         ),
-        ops_test.model.deploy(KAFKA, channel="3/edge", series="jammy", application_name=KAFKA),
+        ops_test.model.deploy(KAFKA, channel="3/stable", series="jammy", application_name=KAFKA),
     )
     await ops_test.model.wait_for_idle(
         apps=[APP_NAME, ZOOKEEPER, KAFKA, TLS_NAME], idle_period=20, timeout=1800

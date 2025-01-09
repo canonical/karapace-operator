@@ -31,9 +31,9 @@ async def test_build_and_deploy(ops_test: OpsTest, karapace_charm, app_charm):
             karapace_charm, application_name=APP_NAME, num_units=1, series="jammy"
         ),
         ops_test.model.deploy(
-            ZOOKEEPER, channel="3/edge", application_name=ZOOKEEPER, series="jammy"
+            ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER, series="jammy"
         ),
-        ops_test.model.deploy(KAFKA, channel="3/edge", application_name=KAFKA, series="jammy"),
+        ops_test.model.deploy(KAFKA, channel="3/stable", application_name=KAFKA, series="jammy"),
         ops_test.model.deploy(app_charm, application_name=DUMMY_NAME, num_units=1, series="jammy"),
     )
 

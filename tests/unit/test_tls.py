@@ -4,10 +4,11 @@
 
 import socket
 from pathlib import Path
+from typing import cast
 from unittest.mock import patch
 
 import yaml
-from scenario import Context, State
+from ops.testing import Context, State
 from src.charm import KarapaceCharm
 from src.literals import SUBSTRATE, Status
 
@@ -19,7 +20,7 @@ KAFKA = "kafka"
 
 def test_blocked_before_tls_relation(ctx: Context, peer_relation_no_data, kafka_relation_tls):
     state_in = State(relations=[peer_relation_no_data, kafka_relation_tls], leader=True)
-    state_out: State = ctx.run("config_changed", state_in)
+    state_out: State = ctx.run(ctx.on.config_changed(), state_in)
 
     assert state_out.unit_status == Status.KAFKA_TLS_MISMATCH.value.status
 
@@ -27,9 +28,9 @@ def test_blocked_before_tls_relation(ctx: Context, peer_relation_no_data, kafka_
 def test_sans_config(ctx: Context, peer_relation, kafka_relation_tls, tls_relation):
     state_in = State(relations=[peer_relation, kafka_relation_tls, tls_relation], leader=True)
 
-    with ctx.manager("config_changed", state_in) as manager:
+    with ctx(ctx.on.config_changed(), state_in) as manager:
         # This is your charm instance, after ops has set it up:
-        charm: KarapaceCharm = manager.charm
+        charm: KarapaceCharm = cast(KarapaceCharm, manager.charm)
         manager.run()
 
         sock_dns = socket.getfqdn()

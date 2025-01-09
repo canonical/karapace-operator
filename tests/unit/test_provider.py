@@ -5,7 +5,7 @@
 import json
 from unittest.mock import patch
 
-from scenario import Context, State
+from ops.testing import Context, Secret, State
 
 CHARM_KEY = "karapace"
 KAFKA = "kafka"
@@ -62,7 +62,7 @@ def test_subject_requested_defers_if_not_healthy(
 ):
     state_in = State(relations=[peer_relation, kafka_relation, requirer_relation], leader=True)
     with patch("workload.KarapaceWorkload.active", return_value=False):
-        state_out = ctx.run(requirer_relation.changed_event, state_in)
+        state_out = ctx.run(ctx.on.relation_changed(requirer_relation), state_in)
 
     assert len(state_out.deferred) == 1
     assert state_out.deferred[0].name == "subject_requested"
@@ -78,7 +78,7 @@ def test_subject_requested_returns_if_not_leader(
 ):
     state_in = State(relations=[peer_relation, kafka_relation, requirer_relation])
     with patch("workload.KarapaceWorkload.active", return_value=True):
-        ctx.run(requirer_relation.changed_event, state_in)
+        ctx.run(ctx.on.relation_changed(requirer_relation), state_in)
 
     patched_exec.assert_not_called()
     patched_workload_write.assert_not_called()
@@ -96,12 +96,13 @@ def test_subject_requested(
     patched_workload_write.side_effect = patched_write_side_effects
     state_in = State(relations=[peer_relation, kafka_relation, requirer_relation], leader=True)
     with patch("workload.KarapaceWorkload.active", return_value=True):
-        state_out = ctx.run(requirer_relation.changed_event, state_in)
+        state_out = ctx.run(ctx.on.relation_changed(requirer_relation), state_in)
 
     # NOTE side_effect of patched write will already assert expected output as well
     patched_workload_write.assert_called_once()
 
-    assert state_out.get_relations("cluster")[0].local_app_data.get("relation-5000")
+    assert (secret := next(iter(state_out.secrets)))
+    assert "relation-5000" in secret.tracked_content
 
 
 def test_relation_broken_defers_if_not_healty(
@@ -112,7 +113,7 @@ def test_relation_broken_defers_if_not_healty(
 ):
     state_in = State(relations=[peer_relation, kafka_relation, requirer_relation], leader=True)
     with patch("workload.KarapaceWorkload.active", return_value=False):
-        state_out = ctx.run(requirer_relation.broken_event, state_in)
+        state_out = ctx.run(ctx.on.relation_broken(requirer_relation), state_in)
 
     assert len(state_out.deferred) == 1
     assert state_out.deferred[0].name == "karapace_relation_broken"
@@ -125,11 +126,16 @@ def test_relation_broken(
     requirer_relation,
     patched_workload_write,
 ):
+    secret = Secret(
+        tracked_content={"relation-5000": "provider-password"}, label="cluster.karapace.app"
+    )
     state_in = State(
-        relations=[peer_relation_with_provider, kafka_relation, requirer_relation], leader=True
+        relations=[peer_relation_with_provider, kafka_relation, requirer_relation],
+        leader=True,
+        secrets=[secret],
     )
     with patch("workload.KarapaceWorkload.active", return_value=True):
-        state_out = ctx.run(requirer_relation.broken_event, state_in)
+        state_out = ctx.run(ctx.on.relation_broken(requirer_relation), state_in)
 
     patched_workload_write.assert_called_once()
 
