@@ -99,7 +99,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         if config_changed:
             logger.info(
                 (
-                    f'Server {self.unit.name.split("/")[1]} updating config - '
+                    f"Server {self.unit.name.split('/')[1]} updating config - "
                     f"OLD CONFIG = {set(rendered_file.items()) - set(self.config_manager.config.items())}, "
                     f"NEW CONFIG = {set(self.config_manager.config.items()) - set(rendered_file.items())}"
                 )
