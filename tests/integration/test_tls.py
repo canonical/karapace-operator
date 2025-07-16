@@ -12,7 +12,6 @@ from pytest_operator.plugin import OpsTest
 logger = logging.getLogger(__name__)
 
 TLS_NAME = "self-signed-certificates"
-CERTS_NAME = "tls-certificates-operator"
 
 
 @pytest.mark.abort_on_fail
@@ -22,13 +21,9 @@ async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
 
     await asyncio.gather(
         ops_test.model.deploy(karapace_charm, application_name=APP_NAME, series="jammy"),
-        ops_test.model.deploy(
-            TLS_NAME, channel="edge", config=tls_config, series="jammy", revision=163
-        ),
-        ops_test.model.deploy(
-            ZOOKEEPER, channel="3/stable", series="jammy", application_name=ZOOKEEPER
-        ),
-        ops_test.model.deploy(KAFKA, channel="3/stable", series="jammy", application_name=KAFKA),
+        ops_test.model.deploy(TLS_NAME, channel="edge", config=tls_config, revision=163),
+        ops_test.model.deploy(ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER),
+        ops_test.model.deploy(KAFKA, channel="3/stable", application_name=KAFKA),
     )
     await ops_test.model.wait_for_idle(
         apps=[APP_NAME, ZOOKEEPER, KAFKA, TLS_NAME], idle_period=20, timeout=1800
