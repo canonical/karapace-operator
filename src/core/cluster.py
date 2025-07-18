@@ -116,6 +116,7 @@ class ClusterContext(Object):
                     substrate=self.substrate,
                 )
             )
+        servers.add(self.server)
 
         return servers
 
