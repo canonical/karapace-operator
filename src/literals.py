@@ -16,6 +16,12 @@ CHARMED_KARAPACE_SNAP_REVISION = 15
 CONTAINER = "karapace"
 PORT = 8081
 
+OTEL_GRPC_PORT = 4317
+OTEL_HTTP_PORT = 4318
+STATSD_PORT = 8125
+METRICS_RULES_DIR = "./src/alert_rules/prometheus"
+LOGS_RULES_DIR = "./src/alert_rules/loki"
+
 PEER = "cluster"
 KARAPACE_REL = "karapace"
 KAFKA_REL = "kafka"

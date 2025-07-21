@@ -5,10 +5,11 @@
 """Supporting objects for Karapace config file management."""
 
 import json
+from typing import Iterable
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
-from literals import KAFKA_CONSUMER_GROUP, KAFKA_TOPIC, PORT
+from literals import KAFKA_CONSUMER_GROUP, KAFKA_TOPIC, OTEL_GRPC_PORT, PORT, STATSD_PORT
 
 
 class ConfigManager:
@@ -28,7 +29,7 @@ class ConfigManager:
         return json.loads("\n".join(raw_file))
 
     @property
-    def config(self) -> dict:
+    def base_config(self) -> dict:
         """Return the Karapace config options."""
         if not self.context.kafka.relation:
             return {}
@@ -77,7 +78,27 @@ class ConfigManager:
             # Auth options
             "registry_authfile": self.workload.paths.registry_authfile,
             "registry_ca": None,
+            # Metrics options
+            "statsd_host": self.context.server.host,
+            "statsd_port": STATSD_PORT,
         }
+
+    @property
+    def otel_config(self) -> dict:
+        """Return the OpenTelemetry config options."""
+        if not self.context.kafka.relation:
+            return {}
+
+        return {
+            "otel_endpoint_url": f"0.0.0.0:{OTEL_GRPC_PORT}",
+            "otel_metrics_exporter": "OTLP",
+            "otel_traces_exporter": "OTLP",
+        }
+
+    @property
+    def config(self) -> dict:
+        """Return all config options."""
+        return self.base_config | self.otel_config
 
     def write_config_file(self) -> None:
         """Create the config file."""
@@ -86,12 +107,13 @@ class ConfigManager:
 
     def set_environment(self) -> None:
         """Sets the env-vars for Karapace."""
-        base_env = {f"KARAPACE_{k.upper()}": v for k, v in self.config.items()}
+        base_env = {f"KARAPACE_{k.upper()}": v for k, v in self.base_config.items()}
+        otel_env = {f"KARAPACE_TELEMETRY__{k.upper()}": v for k, v in self.otel_config.items()}
 
         raw_current_env = self.workload.read("/etc/environment")
         current_env = self.workload.map_env(raw_current_env)
 
-        env = current_env | base_env
+        env = current_env | base_env | otel_env
         content = "\n".join(
             [f"{key}={value if value is not None else ''}" for key, value in env.items()]
         )
