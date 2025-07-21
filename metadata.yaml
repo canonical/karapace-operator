@@ -41,3 +41,4 @@ provides:
     interface: karapace_client
   cos-agent:
     interface: cos_agent
+    limit: 1

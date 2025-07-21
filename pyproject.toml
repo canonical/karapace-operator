@@ -28,6 +28,8 @@ python = ">=3.10,<4.0"
 ops = ">=2.4.1"
 tenacity = ">=8.0.1"
 typing-extensions = "^4.12.2"
+cosl = "^1.0.0"
+ops-tracing = "^3.0.0"
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py

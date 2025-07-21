@@ -12,9 +12,15 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, StatusBase
 
 CHARM_KEY = "karapace"
 SNAP_NAME = "charmed-karapace"
-CHARMED_KARAPACE_SNAP_REVISION = 2
+CHARMED_KARAPACE_SNAP_REVISION = 14
 CONTAINER = "karapace"
 PORT = 8081
+
+OTEL_GRPC_PORT = 4317
+OTEL_HTTP_PORT = 4318
+STATSD_PORT = 8125
+METRICS_RULES_DIR = "./src/alert_rules/prometheus"
+LOGS_RULES_DIR = "./src/alert_rules/loki"
 
 PEER = "cluster"
 KARAPACE_REL = "karapace"
