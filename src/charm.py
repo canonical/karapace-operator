@@ -16,7 +16,18 @@ from events.kafka import KafkaHandler
 from events.password_actions import PasswordActionEvents
 from events.provider import KarapaceHandler
 from events.tls import TLSHandler
-from literals import CHARM_KEY, DebugLevel, Status, Substrate
+from literals import (
+    ADMIN_USER,
+    CHARM_KEY,
+    LOGS_RULES_DIR,
+    METRICS_RULES_DIR,
+    OTEL_GRPC_PORT,
+    OTEL_HTTP_PORT,
+    STATSD_PORT,
+    DebugLevel,
+    Status,
+    Substrate,
+)
 from managers.auth import KarapaceAuth
 from managers.config import ConfigManager
 from managers.kafka import KafkaManager
@@ -55,7 +66,32 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         # LIB HANDLERS
 
-        self._grafana_agent = COSAgentProvider(self)
+        # self.tracing = TracingEndpointRequirer(self, protocols=["otlp_grpc"])
+        self._grafana_agent = COSAgentProvider(
+            self,
+            metrics_endpoints=[
+                {"path": "/metrics", "port": OTEL_HTTP_PORT},
+                {"path": "/metrics", "port": OTEL_GRPC_PORT},
+                {"path": "/metrics", "port": STATSD_PORT},
+            ],
+            refresh_events=[self.on.update_status, self.on.upgrade_charm],
+            tracing_protocols=["otlp_grpc"],
+            metrics_rules_dir=METRICS_RULES_DIR,
+            logs_rules_dir=LOGS_RULES_DIR,
+            log_slots=[f"{self.workload.karapace.name}:logs"],
+            scrape_configs=[
+                {
+                    "basic_auth": {
+                        "username": ADMIN_USER,
+                        # default to avoid raise when not set
+                        # will update on `update-status` from refresh_events arg
+                        "password": self.context.cluster.internal_user_credentials.get(
+                            ADMIN_USER, ""
+                        ),
+                    },
+                }
+            ],
+        )
 
         # CORE EVENTS
 
@@ -68,6 +104,8 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         """Handle install event."""
         if not self.workload.install():
             self._set_status(Status.SNAP_NOT_INSTALLED)
+            return
+
         self.unit.set_workload_version(self.workload.get_version())
 
     def _on_start(self, event: ops.StartEvent):
@@ -105,8 +143,9 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
                 )
             )
 
-            # Config is different, apply changes to file
-            self.config_manager.generate_config()
+            # Config is different, apply changes to file and env
+            self.config_manager.write_config_file()
+            self.config_manager.set_environment()
 
         self.auth_manager.update_client_users()
         self.auth_manager.update_admin_user()
