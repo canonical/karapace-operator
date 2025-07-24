@@ -37,12 +37,20 @@ class TLSManager:
         )
 
     def set_ca(self) -> None:
-        """Sets the unit ca."""
-        if not self.context.server.ca:
+        """Set the Apache Kafka broker CA."""
+        broker_ca = self.context.kafka.broker_ca
+
+        # Compatibility: Kafka 3 charm sends `enabled` on `tls-ca` field.
+        # We resort to using our CA in that case.
+        # This only works if the broker & we use the same TLS provider.
+        if not broker_ca or broker_ca == "enabled":
+            broker_ca = self.context.server.ca
+
+        if not broker_ca:
             logger.error("Can't set CA to unit, missing CA in relation data")
             return
 
-        self.workload.write(content=self.context.server.ca, path=self.workload.paths.ssl_cafile)
+        self.workload.write(content=broker_ca, path=self.workload.paths.ssl_cafile)
 
     def set_certificate(self) -> None:
         """Sets the unit certificate."""
@@ -54,6 +62,8 @@ class TLSManager:
             content=self.context.server.certificate, path=self.workload.paths.ssl_certfile
         )
 
+    # FIXME: This method does not work since * is a bash thing.
+    # We should either use `pathops` glob (which works on both substrates) or glob.glob.
     def remove_stores(self) -> None:
         """Cleans up all keys/certs/stores on a unit."""
         try:

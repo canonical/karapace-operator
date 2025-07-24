@@ -250,6 +250,14 @@ class Kafka(RelationState):
         return "SASL_SSL" if self.tls else "SASL_PLAINTEXT"
 
     @property
+    def broker_ca(self) -> str:
+        """Returns the broker CA if the relation uses TLS, otherwise empty string."""
+        if not self.relation or not self.tls:
+            return ""
+
+        return self.relation_data.get("tls-ca", "")
+
+    @property
     def kafka_ready(self) -> bool:
         """Checks if there is an active Kafka relation with all necessary data.
 

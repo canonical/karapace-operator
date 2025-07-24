@@ -10,14 +10,15 @@ import re
 import socket
 from typing import TYPE_CHECKING
 
-from charms.tls_certificates_interface.v1.tls_certificates import (
+from charms.tls_certificates_interface.v4.tls_certificates import (
     CertificateAvailableEvent,
-    TLSCertificatesRequiresV1,
-    generate_csr,
+    CertificateRequestAttributes,
+    PrivateKey,
+    TLSCertificatesRequiresV4,
     generate_private_key,
 )
 from ops.charm import ActionEvent
-from ops.framework import Object
+from ops.framework import EventBase, EventSource, Object
 
 from literals import TLS_RELATION
 
@@ -27,14 +28,42 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class RefreshTLSCertificatesEvent(EventBase):
+    """Event for refreshing TLS certificates."""
+
+
 class TLSHandler(Object):
     """Handler for managing the client and unit TLS keys/certs."""
+
+    refresh_tls_certificates = EventSource(RefreshTLSCertificatesEvent)
 
     def __init__(self, charm):
         super().__init__(charm, "tls")
         self.charm: "KarapaceCharm" = charm
 
-        self.certificates = TLSCertificatesRequiresV1(self.charm, TLS_RELATION)
+        self.common_name = f"{self.charm.unit.name}-{self.charm.model.uuid}"
+
+        private_key = None
+
+        if key := self.charm.context.server.private_key:
+            private_key = PrivateKey.from_string(key)
+
+        sans_ip = self._sans["sans_ip"] or []
+        sans_dns = self._sans["sans_dns"] or []
+
+        self.certificates = TLSCertificatesRequiresV4(
+            self.charm,
+            TLS_RELATION,
+            certificate_requests=[
+                CertificateRequestAttributes(
+                    common_name=self.common_name,
+                    sans_ip=frozenset(sans_ip),
+                    sans_dns=frozenset(sans_dns),
+                ),
+            ],
+            refresh_events=[self.refresh_tls_certificates],
+            private_key=private_key,
+        )
 
         # Own certificates handlers
         self.framework.observe(
@@ -48,9 +77,6 @@ class TLSHandler(Object):
         )
         self.framework.observe(
             getattr(self.certificates.on, "certificate_available"), self._on_certificate_available
-        )
-        self.framework.observe(
-            getattr(self.certificates.on, "certificate_expiring"), self._on_certificate_expiring
         )
         self.framework.observe(
             getattr(self.charm.on, "set_tls_private_key_action"), self._set_tls_private_key
@@ -67,11 +93,7 @@ class TLSHandler(Object):
         """Handler for `certificates_relation_joined` event."""
         # generate unit private key if not already created by action
         if not self.charm.context.server.private_key:
-            self.charm.context.server.update(
-                {"private-key": generate_private_key().decode("utf-8")}
-            )
-
-        self._request_certificate()
+            self.charm.context.server.update({"private-key": generate_private_key().raw})
 
     def _tls_relation_broken(self, _) -> None:
         """Handler for `certificates_relation_broken` event."""
@@ -94,44 +116,20 @@ class TLSHandler(Object):
             event.defer()
             return
 
-        # avoid setting tls files and restarting
-        if event.certificate_signing_request != self.charm.context.server.csr:
-            logger.error("Can't use certificate, found unknown CSR")
-            return
-
-        self.charm.context.server.update({"certificate": event.certificate})
-        self.charm.context.server.update({"ca-cert": event.ca})
+        self.charm.context.server.update({"certificate": event.certificate.raw})
+        self.charm.context.server.update({"ca-cert": event.ca.raw})
+        # Update private key if required.
+        private_key = self.certificates.private_key
+        if private_key and private_key.raw != self.charm.context.server.private_key:
+            self.charm.context.server.update({"private-key": private_key.raw})
 
         self.charm.tls_manager.set_server_key()
         self.charm.tls_manager.set_ca()
         self.charm.tls_manager.set_certificate()
 
-    def _on_certificate_expiring(self, _) -> None:
-        """Handler for `certificate_expiring` event."""
-        if (
-            not self.charm.context.server.private_key
-            or not self.charm.context.server.csr
-            or not self.charm.context.peer_relation
-        ):
-            logger.error("Missing unit private key and/or old csr")
-            return
-        new_csr = generate_csr(
-            private_key=self.charm.context.server.private_key.encode("utf-8"),
-            subject=self.charm.context.server.relation_data.get("private-address", ""),
-            sans_ip=self._sans["sans_ip"],
-            sans_dns=self._sans["sans_dns"],
-        )
-
-        self.certificates.request_certificate_renewal(
-            old_certificate_signing_request=self.charm.context.server.csr.encode("utf-8"),
-            new_certificate_signing_request=new_csr,
-        )
-
-        self.charm.context.server.update({"csr": new_csr.decode("utf-8").strip()})
-
     def _set_tls_private_key(self, event: ActionEvent) -> None:
         """Handler for `set_tls_private_key` action."""
-        key = event.params.get("internal-key") or generate_private_key().decode("utf-8")
+        key = event.params.get("internal-key") or generate_private_key().raw
         private_key = (
             key
             if re.match(r"(-+(BEGIN|END) [A-Z ]+-+)", key)
@@ -139,23 +137,8 @@ class TLSHandler(Object):
         )
 
         self.charm.context.server.update({"private-key": private_key})
-        self._on_certificate_expiring(event)
-
-    def _request_certificate(self):
-        """Generates and submits CSR to provider."""
-        if not self.charm.context.server.private_key or not self.charm.context.peer_relation:
-            logger.error("Can't request certificate, missing private key")
-            return
-
-        csr = generate_csr(
-            private_key=self.charm.context.server.private_key.encode("utf-8"),
-            subject=self.charm.context.server.relation_data.get("private-address", ""),
-            sans_ip=self._sans["sans_ip"],
-            sans_dns=self._sans["sans_dns"],
-        )
-        self.charm.context.server.update({"csr": csr.decode("utf-8").strip()})
-
-        self.certificates.request_certificate_creation(certificate_signing_request=csr)
+        self.certificates._private_key = PrivateKey.from_string(private_key)
+        self.refresh_tls_certificates.emit()
 
     @property
     def _sans(self) -> dict[str, list[str] | None]:
