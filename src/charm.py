@@ -116,6 +116,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             # Restart so changes take effect
             self.workload.restart()
 
+        self.provider.update_clients_data()
         self.unit.status = ops.ActiveStatus()
 
     def _on_update_status(self, _: ops.UpdateStatusEvent):

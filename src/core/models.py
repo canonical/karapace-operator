@@ -284,6 +284,11 @@ class KarapaceClient(RelationState):
         return f"relation-{getattr(self.relation, 'id', '')}"
 
     @property
+    def password(self) -> str:
+        """The generated password for the client application."""
+        return self.relation_data.get("password", "")
+
+    @property
     def subject(self) -> str:
         """The subject a client application is requesting access to."""
         return self.relation_data.get("subject", "")

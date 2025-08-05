@@ -6,7 +6,7 @@ import asyncio
 import logging
 
 import pytest
-from helpers import APP_NAME, KAFKA, ZOOKEEPER, get_admin_credentials, set_password
+from helpers import APP_NAME, KAFKA, SERIES, ZOOKEEPER, get_admin_credentials, set_password
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,10 @@ logger = logging.getLogger(__name__)
 async def test_build_and_deploy(ops_test: OpsTest, karapace_charm):
     await asyncio.gather(
         ops_test.model.deploy(
-            karapace_charm, application_name=APP_NAME, num_units=1, series="jammy"
+            karapace_charm,
+            application_name=APP_NAME,
+            num_units=1,
+            series=SERIES,
         ),
         ops_test.model.deploy(
             ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER, series="jammy"

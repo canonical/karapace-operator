@@ -92,3 +92,34 @@ class KarapaceHandler(Object):
                 # update on the peer relation data will trigger an update of server properties
                 # on all units
                 self.charm.context.cluster.update({username: ""})
+
+    def update_clients_data(self) -> None:
+        """Update clients relation data."""
+        for client in self.charm.context.clients:
+
+            if not all([client.username, client.password, client.subject]):
+                continue
+
+            subject = client.subject
+            endpoints = self.charm.context.endpoints
+            tls = "enabled" if self.charm.context.cluster.tls_enabled else "disabled"
+            relation = client.relation
+
+            if not relation:
+                continue
+
+            # non-leader units need cluster_config_changed event to update their authfiles
+            if self.charm.unit.is_leader():
+                self.charm.context.cluster.update(
+                    {
+                        client.username: client.password,
+                        "super-users": str(self.charm.context.super_users),
+                    }
+                )
+
+                self.karapace_provider.set_endpoint(relation.id, endpoints)
+                self.karapace_provider.set_credentials(
+                    relation.id, client.username, client.password
+                )
+                self.karapace_provider.set_tls(relation.id, tls)
+                self.karapace_provider.set_subject(relation.id, subject)

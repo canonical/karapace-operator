@@ -6,7 +6,7 @@ import asyncio
 import logging
 
 import pytest
-from helpers import APP_NAME, KAFKA, ZOOKEEPER, set_tls_private_key
+from helpers import APP_NAME, KAFKA, SERIES, ZOOKEEPER, set_tls_private_key
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
@@ -20,8 +20,8 @@ async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
     tls_config = {"ca-common-name": "kafka"}
 
     await asyncio.gather(
-        ops_test.model.deploy(karapace_charm, application_name=APP_NAME, series="jammy"),
-        ops_test.model.deploy(TLS_NAME, channel="edge", config=tls_config, revision=163),
+        ops_test.model.deploy(karapace_charm, application_name=APP_NAME, series=SERIES),
+        ops_test.model.deploy(TLS_NAME, config=tls_config),
         ops_test.model.deploy(ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER),
         ops_test.model.deploy(KAFKA, channel="3/stable", application_name=KAFKA),
     )

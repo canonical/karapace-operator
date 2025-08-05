@@ -5,7 +5,6 @@
 """Supporting objects for Karapace config file management."""
 
 import json
-from typing import Iterable
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
@@ -90,7 +89,7 @@ class ConfigManager:
         base_env = {f"KARAPACE_{k.upper()}": v for k, v in self.config.items()}
 
         raw_current_env = self.workload.read("/etc/environment")
-        current_env = map_env(raw_current_env)
+        current_env = self.workload.map_env(raw_current_env)
 
         env = current_env | base_env
         content = "\n".join(
@@ -98,15 +97,3 @@ class ConfigManager:
         )
 
         self.workload.write(content=content, path="/etc/environment")
-
-
-def map_env(env: Iterable[str]) -> dict[str, str]:
-    """Parse env var into a dict."""
-    map_env = {}
-    for var in env:
-        key = "".join(var.split("=", maxsplit=1)[0])
-        value = "".join(var.split("=", maxsplit=1)[1:])
-        if key:
-            # only check for keys, as we can have an empty value for a variable
-            map_env[key] = value
-    return map_env
