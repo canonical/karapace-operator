@@ -9,6 +9,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerOtherUnitData,
     DataPeerUnitData,
     KafkaRequirerData,
+    KarapaceProviderData,
 )
 from ops import Framework, Object, Relation, Unit
 
@@ -25,7 +26,6 @@ from literals import (
     Status,
     Substrate,
 )
-from relations.karapace import KarapaceProvidesData
 
 
 class ClusterContext(Object):
@@ -48,7 +48,7 @@ class ClusterContext(Object):
             consumer_group_prefix=KAFKA_CONSUMER_GROUP,
         )
 
-        self.client_provider_interface = KarapaceProvidesData(
+        self.client_provider_interface = KarapaceProviderData(
             self.model, relation_name=KARAPACE_REL
         )
 

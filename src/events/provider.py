@@ -7,11 +7,11 @@
 import logging
 from typing import TYPE_CHECKING
 
+from charms.data_platform_libs.v0.data_interfaces import KarapaceProvides, SubjectRequestedEvent
 from ops.charm import RelationBrokenEvent
 from ops.framework import Object
 
 from literals import KARAPACE_REL
-from relations.karapace import KarapaceProvides, SubjectRequestedEvent
 
 if TYPE_CHECKING:
     from charm import KarapaceCharm
