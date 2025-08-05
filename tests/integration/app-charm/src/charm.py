@@ -14,7 +14,6 @@ from charms.data_platform_libs.v0.data_interfaces import KarapaceRequires, Subje
 from ops import ActionEvent, ActiveStatus, CharmBase
 from ops.main import main
 
-
 logger = logging.getLogger(__name__)
 
 CHARM_KEY = "app"
