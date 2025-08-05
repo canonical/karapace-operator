@@ -29,7 +29,7 @@ class ConfigManager:
 
     @property
     def config(self) -> dict:
-        """Return the config options."""
+        """Return the Karapace config options."""
         if not self.context.kafka.relation:
             return {}
 
@@ -79,7 +79,21 @@ class ConfigManager:
             "registry_ca": None,
         }
 
-    def generate_config(self) -> None:
+    def write_config_file(self) -> None:
         """Create the config file."""
         json_str = json.dumps(self.config, indent=2)
         self.workload.write(content=json_str, path=self.workload.paths.karapace_config)
+
+    def set_environment(self) -> None:
+        """Sets the env-vars for Karapace."""
+        base_env = {f"KARAPACE_{k.upper()}": v for k, v in self.config.items()}
+
+        raw_current_env = self.workload.read("/etc/environment")
+        current_env = self.workload.map_env(raw_current_env)
+
+        env = current_env | base_env
+        content = "\n".join(
+            [f"{key}={value if value is not None else ''}" for key, value in env.items()]
+        )
+
+        self.workload.write(content=content, path="/etc/environment")

@@ -11,6 +11,7 @@ from helpers import (
     APP_NAME,
     DUMMY_NAME,
     KAFKA,
+    SERIES,
     ZOOKEEPER,
     assert_list_schemas,
     get_address,
@@ -28,7 +29,10 @@ logger = logging.getLogger(__name__)
 async def test_build_and_deploy(ops_test: OpsTest, karapace_charm, app_charm):
     await asyncio.gather(
         ops_test.model.deploy(
-            karapace_charm, application_name=APP_NAME, num_units=1, series="jammy"
+            karapace_charm,
+            application_name=APP_NAME,
+            num_units=1,
+            series=SERIES,
         ),
         ops_test.model.deploy(
             ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER, series="jammy"

@@ -106,7 +106,8 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             )
 
             # Config is different, apply changes to file
-            self.config_manager.generate_config()
+            self.config_manager.set_environment()
+            self.config_manager.write_config_file()
 
         self.auth_manager.update_client_users()
         self.auth_manager.update_admin_user()
@@ -115,6 +116,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             # Restart so changes take effect
             self.workload.restart()
 
+        self.provider.update_clients_data()
         self.unit.status = ops.ActiveStatus()
 
     def _on_update_status(self, _: ops.UpdateStatusEvent):

@@ -7,6 +7,7 @@
 import secrets
 import string
 from abc import ABC, abstractmethod
+from typing import Iterable
 
 from literals import PATHS
 
@@ -127,3 +128,15 @@ class WorkloadBase(ABC):
             String of 32 randomized letter+digit characters
         """
         return "".join([secrets.choice(string.ascii_letters + string.digits) for _ in range(32)])
+
+    @staticmethod
+    def map_env(env: Iterable[str]) -> dict[str, str]:
+        """Parse env var into a dict."""
+        map_env = {}
+        for var in env:
+            key = "".join(var.split("=", maxsplit=1)[0])
+            value = "".join(var.split("=", maxsplit=1)[1:])
+            if key:
+                # only check for keys, as we can have an empty value for a variable
+                map_env[key] = value
+        return map_env

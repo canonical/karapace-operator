@@ -10,6 +10,7 @@ import pytest
 from helpers import (
     APP_NAME,
     KAFKA,
+    SERIES,
     ZOOKEEPER,
     assert_list_schemas,
     check_socket,
@@ -30,7 +31,10 @@ async def test_build_and_deploy(ops_test: OpsTest, karapace_charm):
     Assert on the unit status before any relations/configurations take place.
     """
     await ops_test.model.deploy(
-        karapace_charm, application_name=APP_NAME, num_units=1, series="jammy"
+        karapace_charm,
+        application_name=APP_NAME,
+        num_units=1,
+        series=SERIES,
     )
     await ops_test.model.wait_for_idle(apps=[APP_NAME], idle_period=30, timeout=3600)
     assert ops_test.model.applications[APP_NAME].status == "blocked"
