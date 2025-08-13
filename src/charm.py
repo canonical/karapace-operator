@@ -16,7 +16,17 @@ from events.kafka import KafkaHandler
 from events.password_actions import PasswordActionEvents
 from events.provider import KarapaceHandler
 from events.tls import TLSHandler
-from literals import CHARM_KEY, DebugLevel, Status, Substrate
+from literals import (
+    CHARM_KEY,
+    LOGS_RULES_DIR,
+    METRICS_RULES_DIR,
+    OTEL_GRPC_PORT,
+    OTEL_HTTP_PORT,
+    STATSD_PORT,
+    DebugLevel,
+    Status,
+    Substrate,
+)
 from managers.auth import KarapaceAuth
 from managers.config import ConfigManager
 from managers.kafka import KafkaManager
@@ -55,7 +65,22 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
 
         # LIB HANDLERS
 
-        self._grafana_agent = COSAgentProvider(self)
+        # self.tracing = TracingEndpointRequirer(self, protocols=["otlp_grpc"])
+        self._grafana_agent = COSAgentProvider(
+            self,
+            metrics_endpoints=[
+                {"path": "/metrics", "port": OTEL_HTTP_PORT},
+                {"path": "/metrics", "port": OTEL_GRPC_PORT},
+                {"path": "/metrics", "port": STATSD_PORT},
+            ],
+            refresh_events=[self.on.update_status, self.on.upgrade_charm],
+            # TODO: Tracing could be re-examined after this bug is fixed:
+            # https://github.com/canonical/opentelemetry-collector-operator/issues/61
+            # tracing_protocols=["otlp_grpc"],
+            metrics_rules_dir=METRICS_RULES_DIR,
+            logs_rules_dir=LOGS_RULES_DIR,
+            log_slots=[f"{self.workload.karapace.name}:logs"],
+        )
 
         # CORE EVENTS
 
@@ -68,6 +93,8 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         """Handle install event."""
         if not self.workload.install():
             self._set_status(Status.SNAP_NOT_INSTALLED)
+            return
+
         self.unit.set_workload_version(self.workload.get_version())
 
     def _on_start(self, event: ops.StartEvent):
