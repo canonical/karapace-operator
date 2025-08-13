@@ -1,0 +1,21 @@
+groups:
+  - name: karapace
+    rules:
+    - record: karapace_exceptions_sum_by_exception
+      expr: sum by (exception) (karapace_exceptions_total)
+    - alert: user_alert_karapace_high_non_success_http_requests
+      expr: sum by (instance) (count_over_time(karapace_http_requests_total{status!~'^2.*'}[1m])) > 5
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: High failing HTTP requests for (instance={{ $labels.instance }})
+        description: "Service returned too many non-success HTTP responses = {{ $value }}\n"
+    - alert: user_alert_karapace_frequent_restart
+      expr: sum by (app)(count_over_time(karapace_shutdown_count[30s])) > 1
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: Karapace service instance={{ $labels.instance }} restarting frequently.
+        description: "Service is experiencing frequent restarts count={{ $value }}\n"
