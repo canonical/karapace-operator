@@ -18,7 +18,7 @@ PORT = 8081
 
 OTEL_GRPC_PORT = 4317
 OTEL_HTTP_PORT = 4318
-STATSD_PORT = 8125
+STATSD_PORT = 9125
 METRICS_RULES_DIR = "./src/alert_rules/prometheus"
 LOGS_RULES_DIR = "./src/alert_rules/loki"
 

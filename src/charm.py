@@ -17,7 +17,6 @@ from events.password_actions import PasswordActionEvents
 from events.provider import KarapaceHandler
 from events.tls import TLSHandler
 from literals import (
-    ADMIN_USER,
     CHARM_KEY,
     LOGS_RULES_DIR,
     METRICS_RULES_DIR,
@@ -75,22 +74,12 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
                 {"path": "/metrics", "port": STATSD_PORT},
             ],
             refresh_events=[self.on.update_status, self.on.upgrade_charm],
-            tracing_protocols=["otlp_grpc"],
+            # TODO: Tracing could be re-examined after this bug is fixed:
+            # https://github.com/canonical/opentelemetry-collector-operator/issues/61
+            # tracing_protocols=["otlp_grpc"],
             metrics_rules_dir=METRICS_RULES_DIR,
             logs_rules_dir=LOGS_RULES_DIR,
             log_slots=[f"{self.workload.karapace.name}:logs"],
-            scrape_configs=[
-                {
-                    "basic_auth": {
-                        "username": ADMIN_USER,
-                        # default to avoid raise when not set
-                        # will update on `update-status` from refresh_events arg
-                        "password": self.context.cluster.internal_user_credentials.get(
-                            ADMIN_USER, ""
-                        ),
-                    },
-                }
-            ],
         )
 
         # CORE EVENTS

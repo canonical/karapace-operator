@@ -5,7 +5,6 @@
 """Supporting objects for Karapace config file management."""
 
 import json
-from typing import Iterable
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
@@ -90,7 +89,7 @@ class ConfigManager:
             return {}
 
         return {
-            "otel_endpoint_url": f"0.0.0.0:{OTEL_GRPC_PORT}",
+            "otel_endpoint_url": f"http://localhost:{OTEL_GRPC_PORT}",
             "otel_metrics_exporter": "OTLP",
             "otel_traces_exporter": "OTLP",
         }
