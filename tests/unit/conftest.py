@@ -2,7 +2,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 from collections import defaultdict
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from ops.testing import Context, PeerRelation, Relation
