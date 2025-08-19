@@ -10,10 +10,9 @@ of the libraries in this repository.
 
 import logging
 
+from charms.data_platform_libs.v0.data_interfaces import KarapaceRequires, SubjectAllowedEvent
 from ops import ActionEvent, ActiveStatus, CharmBase
 from ops.main import main
-
-from relations.karapace import KarapaceRequires, SubjectAllowedEvent
 
 logger = logging.getLogger(__name__)
 
