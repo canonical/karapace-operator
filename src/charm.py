@@ -21,7 +21,6 @@ from literals import (
     LOGS_RULES_DIR,
     METRICS_RULES_DIR,
     OTEL_GRPC_PORT,
-    OTEL_HTTP_PORT,
     STATSD_PORT,
     DebugLevel,
     Status,
@@ -69,7 +68,6 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self._grafana_agent = COSAgentProvider(
             self,
             metrics_endpoints=[
-                {"path": "/metrics", "port": OTEL_HTTP_PORT},
                 {"path": "/metrics", "port": OTEL_GRPC_PORT},
                 {"path": "/metrics", "port": STATSD_PORT},
             ],
