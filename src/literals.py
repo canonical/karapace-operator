@@ -12,7 +12,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, StatusBase
 
 CHARM_KEY = "karapace"
 SNAP_NAME = "charmed-karapace"
-CHARMED_KARAPACE_SNAP_REVISION = 15
+CHARMED_KARAPACE_SNAP_REVISION = 16
 CONTAINER = "karapace"
 PORT = 8081
 
