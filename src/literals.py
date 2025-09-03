@@ -17,7 +17,7 @@ CONTAINER = "karapace"
 PORT = 8081
 
 OTEL_GRPC_PORT = 4317
-STATSD_PORT = 9125
+STATSD_PORT = 9102
 METRICS_RULES_DIR = "./src/alert_rules/prometheus"
 LOGS_RULES_DIR = "./src/alert_rules/loki"
 
