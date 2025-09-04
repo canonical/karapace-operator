@@ -1,0 +1,26 @@
+receivers:
+  otlp/karapace:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:14317
+
+processors:
+  batch:
+
+exporters:
+  prometheus/karapace:
+    endpoint: "0.0.0.0:8082"
+    namespace: "karapace"
+    const_labels:
+      juju_application: self.app.name
+      juju_charm: karapace
+      juju_model: self.model.name
+      juju_model_uuid: self.model.uuid
+      juju_unit: self.unit.name
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp/karapace]
+      processors: [batch]
+      exporters: [prometheus/karapace]

@@ -7,8 +7,10 @@
 import logging
 
 import ops
+import yaml
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
+from charms.operator_libs_linux.v1 import snap
 
 from core.cluster import ClusterContext
 from core.structured_config import CharmConfig
@@ -20,8 +22,9 @@ from literals import (
     CHARM_KEY,
     LOGS_RULES_DIR,
     METRICS_RULES_DIR,
+    OTEL_EXPORTER_PORT,
     OTEL_GRPC_PORT,
-    STATSD_PORT,
+    STATSD_EXPORTER_PORT,
     DebugLevel,
     Status,
     Substrate,
@@ -68,8 +71,8 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self._grafana_agent = COSAgentProvider(
             self,
             metrics_endpoints=[
-                {"path": "/metrics", "port": OTEL_GRPC_PORT},
-                {"path": "/metrics", "port": STATSD_PORT},
+                {"path": "/metrics", "port": OTEL_EXPORTER_PORT},
+                {"path": "/metrics", "port": STATSD_EXPORTER_PORT},
             ],
             refresh_events=[self.on.update_status, self.on.upgrade_charm],
             # TODO: Tracing could be re-examined after this bug is fixed:
@@ -118,6 +121,19 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             event.defer()
             return
 
+        # FIXME: This is a temporary workaround to add Juju topology labels to OTLP metrics.
+        # More information on this issue:
+        # https://github.com/canonical/opentelemetry-collector-operator/issues/78
+        # Once OTelCol charm supports OTLP relations, this logic should be removed
+        if self.workload.read(self.workload.paths.base_otelcol_config) and not self.workload.ping(
+            f"localhost:{OTEL_GRPC_PORT}"
+        ):
+            # OTelCol is running, so add the additional exporter config
+            logger.info(f"Starting OTLP GRPC listener @ :{OTEL_GRPC_PORT}")
+            content = yaml.safe_dump(self.otel_exporter_config)
+            self.workload.write(content, self.workload.paths.custom_otelcol_config)
+            snap.SnapCache()["opentelemetry-collector"].restart()
+
         # Load current properties set in the charm workload
         rendered_file = self.config_manager.parsed_confile
         config_changed = rendered_file != self.config_manager.config
@@ -154,6 +170,18 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
             return
 
         self.on.config_changed.emit()
+
+    @property
+    def otel_exporter_config(self) -> dict:
+        """Additional OTelCol config for OTLP prometheues exporter."""
+        raw = "\n".join(self.workload.read("src/otelcol/otelcol.yaml"))
+        conf = yaml.safe_load(raw)
+        labels = conf["exporters"]["prometheus/karapace"]["const_labels"]
+        labels["juju_application"] = self.app.name
+        labels["juju_model"] = self.model.name
+        labels["juju_model_uuid"] = f"{self.model.uuid}"
+        labels["juju_unit"] = self.unit.name
+        return conf
 
     @property
     def healthy(self) -> bool:
