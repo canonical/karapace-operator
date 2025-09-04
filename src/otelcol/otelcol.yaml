@@ -9,6 +9,7 @@ processors:
 
 exporters:
   prometheus/karapace:
+    metric_expiration: 2160h
     endpoint: "0.0.0.0:8082"
     namespace: "karapace"
     const_labels:
