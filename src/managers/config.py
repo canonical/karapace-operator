@@ -91,7 +91,7 @@ class ConfigManager:
         return {
             "otel_endpoint_url": f"http://localhost:{OTEL_GRPC_PORT}",
             "otel_metrics_exporter": "OTLP",
-            "otel_traces_exporter": "OTLP",
+            "otel_traces_exporter": "NOOP",
         }
 
     @property
