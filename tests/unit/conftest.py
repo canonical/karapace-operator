@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
-from unittest.mock import patch
+from collections import defaultdict
+from unittest.mock import Mock, patch
 
 import pytest
 from ops.testing import Context, PeerRelation, Relation
 from src.charm import KarapaceCharm
+from src.literals import SNAP_NAME
 
 
 @pytest.fixture()
@@ -155,3 +157,14 @@ def patched_workload_read():
 def patched_exec():
     with patch("workload.KarapaceWorkload.exec") as patched_exec:
         yield patched_exec
+
+
+@pytest.fixture(autouse=True)
+def patched_snap(monkeypatch):
+    cache = Mock()
+    snap_mock = Mock()
+    snap_mock.services = defaultdict(default_factory=lambda _: {"active": True})
+    cache.return_value = {SNAP_NAME: snap_mock}
+    with monkeypatch.context() as m:
+        m.setattr("charms.operator_libs_linux.v1.snap.SnapCache", cache)
+        yield

@@ -23,6 +23,7 @@ class KarapaceWorkload(WorkloadBase):
     """Wrapper for performing common operations specific to the Karapace Snap."""
 
     SNAP_SERVICE = "daemon"
+    STATSD_EXPORTER_SERVICE = "statsd-exporter"
 
     def __init__(self) -> None:
         self.karapace = snap.SnapCache()[SNAP_NAME]
@@ -31,6 +32,7 @@ class KarapaceWorkload(WorkloadBase):
     def start(self) -> None:
         try:
             self.karapace.start(services=[self.SNAP_SERVICE])
+            self.karapace.start(services=[self.STATSD_EXPORTER_SERVICE])
         except snap.SnapError as e:
             logger.exception(str(e))
 
@@ -38,6 +40,7 @@ class KarapaceWorkload(WorkloadBase):
     def stop(self) -> None:
         try:
             self.karapace.stop(services=[self.SNAP_SERVICE])
+            self.karapace.stop(services=[self.STATSD_EXPORTER_SERVICE])
         except snap.SnapError as e:
             logger.exception(str(e))
 
@@ -45,6 +48,7 @@ class KarapaceWorkload(WorkloadBase):
     def restart(self) -> None:
         try:
             self.karapace.restart(services=[self.SNAP_SERVICE])
+            self.karapace.restart(services=[self.STATSD_EXPORTER_SERVICE])
         except snap.SnapError as e:
             logger.exception(str(e))
 
@@ -108,7 +112,7 @@ class KarapaceWorkload(WorkloadBase):
             self.karapace.hold()
 
             return True
-        except (snap.SnapError) as e:
+        except snap.SnapError as e:
             logger.error(str(e))
             return False
 

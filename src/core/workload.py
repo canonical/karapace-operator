@@ -5,8 +5,10 @@
 """Supporting objects for Karapace workload."""
 
 import secrets
+import socket
 import string
 from abc import ABC, abstractmethod
+from contextlib import closing
 from typing import Iterable
 
 from literals import PATHS
@@ -49,6 +51,16 @@ class KarapacePaths:
     def ssl_keyfile(self):
         """The private key for Karapace."""
         return f"{self.conf_path}/private.key"
+
+    @property
+    def base_otelcol_config(self) -> str:
+        """Main OTelCol config file."""
+        return "/etc/otelcol/config.d/otelcol_0.yaml"
+
+    @property
+    def custom_otelcol_config(self) -> str:
+        """OTLP -> Prometheus exporter OTelCol config file."""
+        return "/etc/otelcol/config.d/otelcol_5000.yaml"
 
 
 class WorkloadBase(ABC):
@@ -140,3 +152,24 @@ class WorkloadBase(ABC):
                 # only check for keys, as we can have an empty value for a variable
                 map_env[key] = value
         return map_env
+
+    @staticmethod
+    def ping(bootstrap_nodes: str) -> bool:
+        """Check if any socket in `bootstrap_nodes` is available or not.
+
+        Args:
+            bootstrap_nodes (str): A string representation of bootstrap nodes, in the format: host1:port1,host2:port2,...
+
+        Returns:
+            bool: True if any socket is open.
+        """
+        for host_port in bootstrap_nodes.split(","):
+            if ":" not in host_port:
+                continue
+
+            host, port = host_port.split(":")
+            with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+                if sock.connect_ex((host, int(port))) == 0:
+                    return True
+
+        return False
