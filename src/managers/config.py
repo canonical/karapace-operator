@@ -41,7 +41,7 @@ class ConfigManager:
             # Replication properties
             "advertised_hostname": self.context.server.host,
             "advertised_protocol": "https" if self.context.cluster.tls_enabled else "http",
-            "advertised_port": None,  # defults to "port"
+            "advertised_port": None,  # defaults to "port"
             "client_id": f"sr-{self.context.server.unit_id}",
             "master_eligibility": True,
             # REST server options
