@@ -9,6 +9,7 @@ import pytest
 import requests
 from helpers import (
     APP_NAME,
+    CA_FILE,
     KAFKA,
     SERIES,
     ZOOKEEPER,
@@ -93,6 +94,8 @@ async def test_schema_creation(ops_test: OpsTest):
     # Store the CA cert for requests
     action = await ops_test.model.units.get(f"{TLS_NAME}/0").run_action("get-ca-certificate")
     ca = await action.wait()
+    ca = ca.results.get("ca-certificate")
+    open(CA_FILE, "w").write(ca)
 
     schema_name = "test-key"
     operator_password = await get_admin_credentials(ops_test)
@@ -110,7 +113,7 @@ async def test_schema_creation(ops_test: OpsTest):
         json=schema_data,
         headers={"Content-Type": "application/vnd.schemaregistry.v1+json"},
         auth=auth,
-        verify=ca.results["ca-certificate"],
+        verify=CA_FILE,
     )
     response.raise_for_status()
     result = response.text
