@@ -40,15 +40,23 @@ class ConfigManager:
             "karapace_registry": True,
             # Replication properties
             "advertised_hostname": self.context.server.host,
-            "advertised_protocol": "http",
-            "advertised_port": None,
+            "advertised_protocol": "https" if self.context.cluster.tls_enabled else "http",
+            "advertised_port": None,  # defaults to "port"
             "client_id": f"sr-{self.context.server.unit_id}",
             "master_eligibility": True,
             # REST server options
             "host": self.context.server.host,
             "port": PORT,
-            "server_tls_certfile": None,  # running the server in HTTPS mode.
-            "server_tls_keyfile": None,
+            "registry_scheme": "https" if self.context.cluster.tls_enabled else "http",
+            "server_tls_cafile": self.workload.paths.ssl_cafile
+            if self.context.cluster.tls_enabled
+            else None,
+            "server_tls_certfile": self.workload.paths.ssl_certfile
+            if self.context.cluster.tls_enabled
+            else None,
+            "server_tls_keyfile": self.workload.paths.ssl_keyfile
+            if self.context.cluster.tls_enabled
+            else None,
             "access_logs_debug": False,
             "rest_authorization": False,
             "compatibility": "FULL",

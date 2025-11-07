@@ -24,6 +24,8 @@ TLS_CERTIFICATES_OPERATOR = "tls-certificates-operator"
 DUMMY_NAME = "app"
 SERIES = "noble"
 
+CA_FILE = "/tmp/ca-cert.pem"
+
 
 async def get_admin_credentials(ops_test: OpsTest, num_unit=0) -> str:
     """Use the charm action to retrieve the password for admin user.
