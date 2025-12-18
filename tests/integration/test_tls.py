@@ -24,6 +24,7 @@ from literals import PORT
 logger = logging.getLogger(__name__)
 
 TLS_NAME = "self-signed-certificates"
+TLS_CHANNEL = "1/stable"
 
 
 @pytest.mark.abort_on_fail
@@ -33,7 +34,7 @@ async def test_deploy_tls(ops_test: OpsTest, karapace_charm):
 
     await asyncio.gather(
         ops_test.model.deploy(karapace_charm, application_name=APP_NAME, series=SERIES),
-        ops_test.model.deploy(TLS_NAME, config=tls_config),
+        ops_test.model.deploy(TLS_NAME, channel=TLS_CHANNEL, config=tls_config),
         ops_test.model.deploy(ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER),
         ops_test.model.deploy(KAFKA, channel="3/stable", application_name=KAFKA),
     )
