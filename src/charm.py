@@ -24,6 +24,7 @@ from literals import (
     METRICS_RULES_DIR,
     OTEL_EXPORTER_PORT,
     OTEL_GRPC_PORT,
+    PEER,
     STATSD_EXPORTER_PORT,
     DebugLevel,
     Status,
@@ -89,6 +90,7 @@ class KarapaceCharm(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.update_status, self._on_update_status)
+        self.framework.observe(self.on[PEER].relation_changed, self._on_config_changed)
 
     def _on_install(self, _: ops.InstallEvent):
         """Handle install event."""

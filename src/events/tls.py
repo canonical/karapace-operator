@@ -127,6 +127,8 @@ class TLSHandler(Object):
         self.charm.tls_manager.set_ca()
         self.charm.tls_manager.set_certificate()
 
+        self.charm.on.config_changed.emit()
+
     def _set_tls_private_key(self, event: ActionEvent) -> None:
         """Handler for `set_tls_private_key` action."""
         key = event.params.get("internal-key") or generate_private_key().raw
