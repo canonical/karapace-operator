@@ -83,7 +83,7 @@ async def test_deployment_active(ops_test: OpsTest, model_uuid: str, tmp_path):
 async def test_deployment_on_machines(ops_test: OpsTest, model_uuid: str, tmp_path):
     """Test that `machines` TF variable work as expected."""
     # Add machines and wait for them to start
-    await ops_test.juju("add-machine", "--base", "ubuntu@22.04", "-n", "3")
+    await ops_test.juju("add-machine", "--base", "ubuntu@24.04", "-n", "3")
 
     await ops_test.model.block_until(
         lambda: len(ops_test.model.machines) == 3
