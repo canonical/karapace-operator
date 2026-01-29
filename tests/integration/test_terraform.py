@@ -65,7 +65,7 @@ async def test_deployment_active(ops_test: OpsTest, model_uuid: str, tmp_path):
         apps=[APP_NAME], idle_period=30, timeout=900, status="blocked"
     )
     assert (
-        ops_test.model.applications[APP_NAME].status_message
+        ops_test.model.applications[APP_NAME].units[0].workload_status_message
         == Status.KAFKA_NOT_RELATED.value.status.message
     )
 
@@ -103,7 +103,7 @@ async def test_deployment_on_machines(ops_test: OpsTest, model_uuid: str, tmp_pa
         apps=[APP_NAME], idle_period=30, timeout=900, status="blocked"
     )
     assert (
-        ops_test.model.applications[APP_NAME].status_message
+        ops_test.model.applications[APP_NAME].units[0].workload_status_message
         == Status.KAFKA_NOT_RELATED.value.status.message
     )
 
