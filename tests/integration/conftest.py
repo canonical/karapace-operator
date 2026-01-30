@@ -2,6 +2,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import json
 import os
 import subprocess
 import typing
@@ -66,3 +67,16 @@ async def app_charm(ops_test: OpsTest) -> Path:
     charm_path = "tests/integration/app-charm"
     charm = await ops_test.build_charm(charm_path)
     return charm
+
+
+@pytest.fixture(scope="module")
+async def model_uuid(ops_test: OpsTest) -> str:
+    ret, models_raw, _ = await ops_test.juju("models", "--format", "json")
+    assert not ret
+    return next(
+        iter(
+            mdl["model-uuid"]
+            for mdl in json.loads(models_raw)["models"]
+            if mdl["short-name"] == ops_test.model.name
+        )
+    )
