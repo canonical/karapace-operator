@@ -79,16 +79,13 @@ optional = true
 
 [tool.poetry.group.integration.dependencies]
 pytest = ">=7.2"
-juju = "^3.2.0"
 coverage = { extras = ["toml"], version = ">7.0" }
-pytest-operator = ">0.20"
 tenacity = ">=7.0"
 pure-sasl = ">=0.5"
 requests = ">2.25"
 pyyaml = "^6.0.1"
+jubilant-adapters = { git = "https://github.com/imanenami/jubilant_adapters", branch = "alpha.2" }
 
-# To be enabled if we are using groups on integration tests
-# pytest-operator-groups = {git = "https://github.com/canonical/data-platform-workflows", tag = "v7", subdirectory = "python/pytest_plugins/pytest_operator_groups"}
 
 [tool.poetry.group.format.dependencies]
 pyright = "^1.1.301"
