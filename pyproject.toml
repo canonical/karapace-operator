@@ -84,7 +84,7 @@ tenacity = ">=7.0"
 pure-sasl = ">=0.5"
 requests = ">2.25"
 pyyaml = "^6.0.1"
-jubilant-adapters = { git = "https://github.com/imanenami/jubilant_adapters", branch = "alpha.2" }
+jubilant-adapters = "^0.1.0"
 
 
 [tool.poetry.group.format.dependencies]

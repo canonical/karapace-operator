@@ -595,17 +595,13 @@ description = "Adapters for Jubilant Charm Testing Library"
 optional = false
 python-versions = ">=3.10"
 groups = ["integration"]
-files = []
-develop = false
+files = [
+    {file = "jubilant_adapters-0.1.0-py3-none-any.whl", hash = "sha256:a29c711d49a342a8ee3f8db1fb60523555162099406f9c082d5ff100fcb2cdcf"},
+    {file = "jubilant_adapters-0.1.0.tar.gz", hash = "sha256:890c3df948f3999dd8b03e8376c786d3446e2a66eb5e54ed0e47019a2e7ce8d4"},
+]
 
 [package.dependencies]
 jubilant = ">=1.7.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/imanenami/jubilant_adapters"
-reference = "alpha.2"
-resolved_reference = "781056f62820b85f893ba085ef8313acaf35cedb"
 
 [[package]]
 name = "kafka-python-ng"
@@ -1422,4 +1418,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "659a6117197ad99263acfa5c1053d47458b1c25a1c50ae2a1ac16869fc053d21"
+content-hash = "64fc5344c006a3f7d17ac725480b6fb4ea1bf9dd572b930918ef8584e0ebf758"
