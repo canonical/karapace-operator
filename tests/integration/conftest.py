@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -53,7 +54,7 @@ def setup_juju(juju: JujuFixture):
 @pytest.fixture(scope="module")
 def karapace_charm(juju: JujuFixture) -> Path:
     """Kafka charm used for integration testing."""
-    charm = juju.ext.build_charm(".")
+    charm = juju.ext.build_charm(".", use_cache=bool(os.environ.get("CI")))
     return charm
 
 
@@ -61,7 +62,7 @@ def karapace_charm(juju: JujuFixture) -> Path:
 def app_charm(juju: JujuFixture) -> Path:
     """Build the application charm."""
     charm_path = "tests/integration/app-charm"
-    charm = juju.ext.build_charm(charm_path)
+    charm = juju.ext.build_charm(charm_path, use_cache=bool(os.environ.get("CI")))
     return charm
 
 
