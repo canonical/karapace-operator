@@ -55,6 +55,7 @@ jobs:
     with:
       path-to-charm-directory: ${{ matrix.path }}
       cache: false
+      charmcraft-snap-revisions: '{"amd64": "7517", "arm64": "7519"}'
 
   integration-test:
     strategy:
