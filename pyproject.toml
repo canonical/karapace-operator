@@ -68,7 +68,7 @@ pyright = "^1.1.301"
 optional = true
 
 [tool.poetry.group.unit.dependencies]
-pytest = ">=7.2"
+pytest = ">=9.0.3"
 coverage = { extras = ["toml"], version = ">7.0" }
 pytest-mock = "^3.11.1"
 ops = { version = ">=2.17.0", extras = ["testing"] }
@@ -78,7 +78,7 @@ pyyaml = "^6.0.1"
 optional = true
 
 [tool.poetry.group.integration.dependencies]
-pytest = ">=7.2"
+pytest = ">=9.0.3"
 juju = "^3.2.0"
 coverage = { extras = ["toml"], version = ">7.0" }
 pytest-operator = ">0.20"
