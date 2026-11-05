@@ -8,15 +8,16 @@ from subprocess import PIPE, check_output
 import pytest
 from helpers import (
     APP_NAME,
+    DEFAULT_CONSTRAINTS,
     KAFKA,
+    KAFKA_CHANNEL,
     SERIES,
-    ZOOKEEPER,
     assert_list_schemas,
     check_socket,
     get_address,
     get_admin_credentials,
 )
-from jubilant_adapters import JujuFixture, gather
+from jubilant_adapters import JujuFixture
 
 from literals import PORT
 
@@ -33,6 +34,7 @@ def test_build_and_deploy(juju: JujuFixture, karapace_charm):
         application_name=APP_NAME,
         num_units=1,
         series=SERIES,
+        constraints=DEFAULT_CONSTRAINTS,
     )
     juju.ext.model.wait_for_idle(apps=[APP_NAME], idle_period=30, timeout=3600)
     assert juju.ext.model.applications[APP_NAME].status == "blocked"
@@ -40,19 +42,16 @@ def test_build_and_deploy(juju: JujuFixture, karapace_charm):
 
 def test_integrate_kafka(juju: JujuFixture):
     """Integrate charm with Kafka."""
-    gather(
-        juju.ext.model.deploy(
-            ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER, series="jammy"
-        ),
-        juju.ext.model.deploy(KAFKA, channel="3/stable", application_name=KAFKA, series="jammy"),
+    juju.ext.model.deploy(
+        KAFKA,
+        channel=KAFKA_CHANNEL,
+        application_name=KAFKA,
+        config={"roles": "broker,controller"},
+        constraints=DEFAULT_CONSTRAINTS
     )
-    juju.ext.model.wait_for_idle(apps=[ZOOKEEPER, KAFKA], idle_period=30, timeout=3600)
-
-    juju.ext.model.add_relation(KAFKA, ZOOKEEPER)
-    juju.ext.model.wait_for_idle(apps=[KAFKA, ZOOKEEPER])
+    juju.ext.model.wait_for_idle(apps=[KAFKA], idle_period=30, timeout=3600)
 
     assert juju.ext.model.applications[KAFKA].status == "active"
-    assert juju.ext.model.applications[ZOOKEEPER].status == "active"
 
     juju.ext.model.add_relation(KAFKA, APP_NAME)
     juju.ext.model.wait_for_idle(apps=[KAFKA, APP_NAME])
@@ -96,7 +95,7 @@ def test_schema_creation(juju: JujuFixture):
 def test_scale_up_kafka(juju: JujuFixture):
     """Scale up Kafka charm."""
     juju.ext.model.applications[KAFKA].add_units(count=2)
-    juju.ext.model.wait_for_idle(apps=[ZOOKEEPER, KAFKA, APP_NAME])
+    juju.ext.model.wait_for_idle(apps=[KAFKA, APP_NAME])
 
     assert juju.ext.model.applications[APP_NAME].status == "active"
 
