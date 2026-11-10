@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Simple Terraform smoke tests."""
+
 import json
 import logging
 import os

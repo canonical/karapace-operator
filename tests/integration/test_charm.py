@@ -47,7 +47,7 @@ def test_integrate_kafka(juju: JujuFixture):
         channel=KAFKA_CHANNEL,
         application_name=KAFKA,
         config={"roles": "broker,controller"},
-        constraints=DEFAULT_CONSTRAINTS
+        constraints=DEFAULT_CONSTRAINTS,
     )
     juju.ext.model.wait_for_idle(apps=[KAFKA], idle_period=30, timeout=3600)
 
