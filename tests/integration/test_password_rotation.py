@@ -4,7 +4,15 @@
 
 import logging
 
-from helpers import APP_NAME, KAFKA, SERIES, ZOOKEEPER, get_admin_credentials, set_password
+from helpers import (
+    APP_NAME,
+    DEFAULT_CONSTRAINTS,
+    KAFKA,
+    KAFKA_CHANNEL,
+    SERIES,
+    get_admin_credentials,
+    set_password,
+)
 from jubilant_adapters import JujuFixture, gather
 
 logger = logging.getLogger(__name__)
@@ -17,16 +25,19 @@ def test_build_and_deploy(juju: JujuFixture, karapace_charm):
             application_name=APP_NAME,
             num_units=1,
             series=SERIES,
+            constraints=DEFAULT_CONSTRAINTS,
         ),
         juju.ext.model.deploy(
-            ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER, series="jammy"
+            KAFKA,
+            channel=KAFKA_CHANNEL,
+            application_name=KAFKA,
+            config={"roles": "broker,controller"},
+            constraints=DEFAULT_CONSTRAINTS,
         ),
-        juju.ext.model.deploy(KAFKA, channel="3/stable", application_name=KAFKA, series="jammy"),
     )
 
-    juju.ext.model.add_relation(KAFKA, ZOOKEEPER)
     juju.ext.model.wait_for_idle(
-        apps=[KAFKA, ZOOKEEPER],
+        apps=[KAFKA],
         idle_period=60,
         timeout=1000,
         status="active",
@@ -34,7 +45,6 @@ def test_build_and_deploy(juju: JujuFixture, karapace_charm):
     )
 
     assert juju.ext.model.applications[KAFKA].status == "active"
-    assert juju.ext.model.applications[ZOOKEEPER].status == "active"
 
     juju.ext.model.add_relation(KAFKA, APP_NAME)
     juju.ext.model.wait_for_idle(

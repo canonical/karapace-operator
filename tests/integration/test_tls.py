@@ -8,9 +8,10 @@ import requests
 from helpers import (
     APP_NAME,
     CA_FILE,
+    DEFAULT_CONSTRAINTS,
     KAFKA,
+    KAFKA_CHANNEL,
     SERIES,
-    ZOOKEEPER,
     get_address,
     get_admin_credentials,
     set_tls_private_key,
@@ -29,32 +30,41 @@ def test_deploy_tls(juju: JujuFixture, karapace_charm):
     tls_config = {"ca-common-name": "kafka"}
 
     gather(
-        juju.ext.model.deploy(karapace_charm, application_name=APP_NAME, series=SERIES),
-        juju.ext.model.deploy(TLS_NAME, channel=TLS_CHANNEL, config=tls_config),
-        juju.ext.model.deploy(ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER),
-        juju.ext.model.deploy(KAFKA, channel="3/stable", application_name=KAFKA),
+        juju.ext.model.deploy(
+            karapace_charm,
+            application_name=APP_NAME,
+            series=SERIES,
+            constraints=DEFAULT_CONSTRAINTS,
+        ),
+        juju.ext.model.deploy(
+            TLS_NAME,
+            channel=TLS_CHANNEL,
+            config=tls_config,
+            constraints=DEFAULT_CONSTRAINTS,
+        ),
+        juju.ext.model.deploy(
+            KAFKA,
+            channel=KAFKA_CHANNEL,
+            application_name=KAFKA,
+            config={"roles": "broker,controller"},
+            constraints=DEFAULT_CONSTRAINTS,
+        ),
     )
-    juju.ext.model.wait_for_idle(
-        apps=[APP_NAME, ZOOKEEPER, KAFKA, TLS_NAME], idle_period=20, timeout=1800
-    )
+    juju.ext.model.wait_for_idle(apps=[APP_NAME, KAFKA, TLS_NAME], idle_period=20, timeout=1800)
 
     assert juju.ext.model.applications[APP_NAME].status == "blocked"
-    assert juju.ext.model.applications[KAFKA].status == "blocked"
-    assert juju.ext.model.applications[ZOOKEEPER].status == "active"
+    assert juju.ext.model.applications[KAFKA].status == "active"
     assert juju.ext.model.applications[TLS_NAME].status == "active"
 
-    # Relate Zookeeper & Kafka to TLS
-    juju.ext.model.add_relation(KAFKA, ZOOKEEPER)
-    juju.ext.model.add_relation(TLS_NAME, ZOOKEEPER)
+    # Relate Kafka to TLS
     juju.ext.model.add_relation(TLS_NAME, f"{KAFKA}:certificates")
 
     with juju.ext.fast_forward(fast_interval="60s"):
         juju.ext.model.wait_for_idle(
-            apps=[TLS_NAME, ZOOKEEPER, KAFKA], idle_period=25, timeout=1800, status="active"
+            apps=[TLS_NAME, KAFKA], idle_period=25, timeout=1800, status="active"
         )
 
     assert juju.ext.model.applications[TLS_NAME].status == "active"
-    assert juju.ext.model.applications[ZOOKEEPER].status == "active"
     assert juju.ext.model.applications[KAFKA].status == "active"
 
 

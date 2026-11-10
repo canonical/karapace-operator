@@ -20,7 +20,6 @@ APP_NAME = METADATA["name"]
 DEFAULT_CONSTRAINTS = {"arch": ARCHITECTURE}
 KAFKA = "kafka"
 KAFKA_CHANNEL = "4/edge"  # no arm release available on the stable yet.
-ZOOKEEPER = "zookeeper"
 TLS_CERTIFICATES_OPERATOR = "tls-certificates-operator"
 DUMMY_NAME = "app"
 SERIES = "noble"
