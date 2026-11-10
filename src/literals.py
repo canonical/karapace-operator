@@ -15,7 +15,7 @@ _ARCH = platform.processor()
 ARCHITECTURE = "arm64" if _ARCH == "aarch64" else "amd64"
 CHARM_KEY = "karapace"
 SNAP_NAME = "charmed-karapace"
-CHARMED_KARAPACE_SNAP_REVISION = {"amd64": 16, "arm64": 17}.get(ARCHITECTURE)
+CHARMED_KARAPACE_SNAP_REVISION = {"amd64": 18, "arm64": 17}.get(ARCHITECTURE)
 CONTAINER = "karapace"
 PORT = 8081
 
