@@ -13,6 +13,8 @@ resource "juju_application" "karapace" {
   machines    = length(var.machines) > 0 ? var.machines : null
   constraints = var.constraints
   config      = var.config
+
+  endpoint_bindings = var.endpoint_bindings
 }
 
 # Karapace client offer
