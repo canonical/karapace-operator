@@ -51,7 +51,7 @@ jobs:
           - .
           - tests/integration/app-charm
     name: Build charm | ${{ matrix.path }}
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v29.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v54
     with:
       path-to-charm-directory: ${{ matrix.path }}
       cache: false
@@ -66,16 +66,19 @@ jobs:
           - integration-provider
           - integration-tls
           - integration-terraform
+        arch:
+          - AMD64
+          - ARM64
     name: ${{ matrix.tox-environments }}
     needs:
       - lint
       - unit-test
       - build
-    runs-on: [self-hosted, linux, AMD64, X64, medium, noble]
+    runs-on: [self-hosted, linux, ${{ matrix.arch }}, X64, medium, noble]
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup operator environment
         # TODO: Replace with custom image on self-hosted runner
         uses: charmed-kubernetes/actions-operator@main
@@ -83,7 +86,7 @@ jobs:
           provider: lxd
           juju-channel: 3.6/stable
       - name: Download packed charm(s)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: ${{ needs.build.outputs.artifact-prefix }}-*
           merge-multiple: true
