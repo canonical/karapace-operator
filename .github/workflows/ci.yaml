@@ -69,7 +69,7 @@ jobs:
         arch:
           - amd64
           - arm64
-    name: ${{ matrix.tox-environments }}
+    name: ${{ matrix.tox-environments }} - ${{ matrix.arch }}
     needs:
       - lint
       - unit-test
