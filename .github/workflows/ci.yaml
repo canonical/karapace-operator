@@ -67,14 +67,14 @@ jobs:
           - integration-tls
           - integration-terraform
         arch:
-          - AMD64
-          - ARM64
+          - amd64
+          - arm64
     name: ${{ matrix.tox-environments }}
     needs:
       - lint
       - unit-test
       - build
-    runs-on: [self-hosted, linux, ${{ matrix.arch }}, X64, medium, noble]
+    runs-on: ${{ format('self-hosted-linux-{0}-noble-medium', matrix.arch) }}
     timeout-minutes: 120
     steps:
       - name: Checkout
