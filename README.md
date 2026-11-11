@@ -102,6 +102,30 @@ juju remove-relation zookeeper tls-certificates-operator
 
 Note: The TLS settings here are for self-signed-certificates which are not recommended for production clusters, the `tls-certificates-operator` charm offers a variety of configurations, read more on the TLS charm [here](https://charmhub.io/tls-certificates-operator)
 
+## Monitoring
+
+The Charmed Karapace Operator comes with a metrics exporter.
+The metrics can be queried by accessing the `http://<unit-ip>:8082/metrics` endpoints.
+
+Additionally, the charm provides integration with the [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
+
+Deploy the `cos-lite` bundle in a Kubernetes environment. This can be done by following the
+[COS deployment tutorial](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s).
+Since the Charmed Karapace Operator is deployed on a machine environment, it needs to offer the endpoints
+for the COS relations. The [offers-overlay](https://github.com/canonical/cos-lite-bundle/blob/main/overlays/offers-overlay.yaml)
+can be used for that, see the COS deployment tutorial link above for guidance.
+
+Next, deploy [Opentelemetry Collector](https://charmhub.io/opentelemetry-collector) and follow the
+[tutorial](https://discourse.charmhub.io/t/using-the-grafana-agent-machine-charm/8896)
+to relate it to the COS Lite offers.
+
+Now, integrate `karapace` and `opentelemetry-collector` charms:
+
+```bash
+juju integrate karapace opentelemetry-collector
+```
+
+After this is complete, Grafana will have the `Karapace` dashboard available.
 
 ## Contributing
 
