@@ -20,7 +20,7 @@ on:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout
@@ -33,7 +33,7 @@ jobs:
 
   unit-test:
     name: Unit tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout
@@ -51,7 +51,7 @@ jobs:
           - .
           - tests/integration/app-charm
     name: Build charm | ${{ matrix.path }}
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v29.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v54
     with:
       path-to-charm-directory: ${{ matrix.path }}
       cache: false
@@ -60,30 +60,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        arch:
+          - amd64
+          - arm64
         tox-environments:
           - integration-charm
           - integration-password-rotation
           - integration-provider
           - integration-tls
           - integration-terraform
-    name: ${{ matrix.tox-environments }}
+        exclude:
+          # TODO: remove this exclude when an arm edge release is available.
+          - arch: arm64
+            tox-environments: integration-terraform
+    name: ${{ matrix.tox-environments }} - ${{ matrix.arch }}
     needs:
       - lint
       - unit-test
       - build
-    runs-on: [self-hosted, linux, AMD64, X64, medium, noble]
+    runs-on: ${{ format('self-hosted-linux-{0}-noble-medium', matrix.arch) }}
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup operator environment
-        # TODO: Replace with custom image on self-hosted runner
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: lxd
-          juju-channel: 3.6/stable
+        run: |
+          sudo snap install concierge --classic
+          sudo concierge prepare --preset machine --extra-debs pipx
+          pipx ensurepath
+          pipx install poetry tox
       - name: Download packed charm(s)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: ${{ needs.build.outputs.artifact-prefix }}-*
           merge-multiple: true

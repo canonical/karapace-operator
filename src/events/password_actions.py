@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Event handlers for password-related Juju Actions."""
+
 import logging
 from typing import TYPE_CHECKING
 

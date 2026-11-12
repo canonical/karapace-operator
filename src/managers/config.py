@@ -48,15 +48,15 @@ class ConfigManager:
             "host": self.context.server.host,
             "port": PORT,
             "registry_scheme": "https" if self.context.cluster.tls_enabled else "http",
-            "server_tls_cafile": self.workload.paths.ssl_cafile
-            if self.context.cluster.tls_enabled
-            else None,
-            "server_tls_certfile": self.workload.paths.ssl_certfile
-            if self.context.cluster.tls_enabled
-            else None,
-            "server_tls_keyfile": self.workload.paths.ssl_keyfile
-            if self.context.cluster.tls_enabled
-            else None,
+            "server_tls_cafile": (
+                self.workload.paths.ssl_cafile if self.context.cluster.tls_enabled else None
+            ),
+            "server_tls_certfile": (
+                self.workload.paths.ssl_certfile if self.context.cluster.tls_enabled else None
+            ),
+            "server_tls_keyfile": (
+                self.workload.paths.ssl_keyfile if self.context.cluster.tls_enabled else None
+            ),
             "access_logs_debug": False,
             "rest_authorization": False,
             "compatibility": "FULL",
@@ -68,15 +68,15 @@ class ConfigManager:
             "group_id": KAFKA_CONSUMER_GROUP,
             "replication_factor": replication_factor,
             "security_protocol": self.context.kafka.security_protocol,
-            "ssl_cafile": self.workload.paths.ssl_cafile
-            if self.context.cluster.tls_enabled
-            else None,
-            "ssl_certfile": self.workload.paths.ssl_certfile
-            if self.context.cluster.tls_enabled
-            else None,
-            "ssl_keyfile": self.workload.paths.ssl_keyfile
-            if self.context.cluster.tls_enabled
-            else None,
+            "ssl_cafile": (
+                self.workload.paths.ssl_cafile if self.context.cluster.tls_enabled else None
+            ),
+            "ssl_certfile": (
+                self.workload.paths.ssl_certfile if self.context.cluster.tls_enabled else None
+            ),
+            "ssl_keyfile": (
+                self.workload.paths.ssl_keyfile if self.context.cluster.tls_enabled else None
+            ),
             "bootstrap_uri": self.context.kafka.bootstrap_servers,
             "sasl_bootstrap_uri": self.context.kafka.bootstrap_servers,
             "sasl_mechanism": "SCRAM-SHA-512",

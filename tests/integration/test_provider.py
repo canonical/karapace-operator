@@ -7,10 +7,11 @@ from subprocess import PIPE, check_output
 
 from helpers import (
     APP_NAME,
+    DEFAULT_CONSTRAINTS,
     DUMMY_NAME,
     KAFKA,
+    KAFKA_CHANNEL,
     SERIES,
-    ZOOKEEPER,
     assert_list_schemas,
     get_address,
     get_application_credentials,
@@ -29,21 +30,27 @@ def test_build_and_deploy(juju: JujuFixture, karapace_charm, app_charm):
             application_name=APP_NAME,
             num_units=1,
             series=SERIES,
+            constraints=DEFAULT_CONSTRAINTS,
         ),
         juju.ext.model.deploy(
-            ZOOKEEPER, channel="3/stable", application_name=ZOOKEEPER, series="jammy"
+            KAFKA,
+            channel=KAFKA_CHANNEL,
+            application_name=KAFKA,
+            config={"roles": "broker,controller"},
+            constraints=DEFAULT_CONSTRAINTS,
         ),
-        juju.ext.model.deploy(KAFKA, channel="3/stable", application_name=KAFKA, series="jammy"),
-        juju.ext.model.deploy(app_charm, application_name=DUMMY_NAME, num_units=1, series="jammy"),
+        juju.ext.model.deploy(
+            app_charm,
+            application_name=DUMMY_NAME,
+            num_units=1,
+            series="jammy",
+            constraints=DEFAULT_CONSTRAINTS,
+        ),
     )
 
-    juju.ext.model.add_relation(KAFKA, ZOOKEEPER)
-    juju.ext.model.wait_for_idle(
-        apps=[KAFKA, ZOOKEEPER], status="active", idle_period=60, timeout=1000
-    )
+    juju.ext.model.wait_for_idle(apps=[KAFKA], status="active", idle_period=60, timeout=1000)
 
     assert juju.ext.model.applications[KAFKA].status == "active"
-    assert juju.ext.model.applications[ZOOKEEPER].status == "active"
 
     juju.ext.model.add_relation(KAFKA, APP_NAME)
     juju.ext.model.wait_for_idle(

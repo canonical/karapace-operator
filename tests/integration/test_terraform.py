@@ -3,12 +3,13 @@
 # See LICENSE file for licensing details.
 
 """Simple Terraform smoke tests."""
+
 import json
 import logging
 import os
 import random
 
-from helpers import APP_NAME
+from helpers import APP_NAME, DEFAULT_CONSTRAINTS
 from jubilant_adapters import JujuFixture
 
 from literals import Status
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 TFVARS_DEFAULTS = {
     "app_name": APP_NAME,
     "units": 1,
+    "constraints": " ".join(f"{k}={v}" for k, v in DEFAULT_CONSTRAINTS.items()),
 }
 TFVARS_FILENAME = "test.tfvars.json"
 
@@ -77,7 +79,15 @@ def test_deployment_active(juju: JujuFixture, model_uuid: str, tmp_path):
 def test_deployment_on_machines(juju: JujuFixture, model_uuid: str, tmp_path):
     """Test that `machines` TF variable work as expected."""
     # Add machines and wait for them to start
-    juju.juju("add-machine", "--base", "ubuntu@24.04", "-n", "3")
+    juju.juju(
+        "add-machine",
+        "--base",
+        "ubuntu@24.04",
+        "--constraints",
+        TFVARS_DEFAULTS["constraints"],
+        "-n",
+        "3",
+    )
 
     juju.ext.model.block_until(
         lambda: len(juju.ext.model.machines) == 3

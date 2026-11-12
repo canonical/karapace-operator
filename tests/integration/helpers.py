@@ -11,15 +11,15 @@ from subprocess import PIPE, check_output
 import yaml
 from jubilant_adapters import JujuFixture
 
-from literals import PORT
+from literals import ARCHITECTURE, PORT
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
-
+DEFAULT_CONSTRAINTS = {"arch": ARCHITECTURE}
 KAFKA = "kafka"
-ZOOKEEPER = "zookeeper"
+KAFKA_CHANNEL = "4/edge"  # no arm release available on the stable yet.
 TLS_CERTIFICATES_OPERATOR = "tls-certificates-operator"
 DUMMY_NAME = "app"
 SERIES = "noble"
