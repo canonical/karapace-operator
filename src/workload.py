@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 
+from charmlibs import pathops
 from charms.operator_libs_linux.v1 import snap
 from tenacity import retry, retry_if_result, stop_after_attempt, wait_fixed
 from typing_extensions import override
@@ -27,6 +28,7 @@ class KarapaceWorkload(WorkloadBase):
 
     def __init__(self) -> None:
         self.karapace = snap.SnapCache()[SNAP_NAME]
+        self.root = pathops.LocalPath("/")
 
     @override
     def start(self) -> None:
