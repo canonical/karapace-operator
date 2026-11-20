@@ -12,6 +12,8 @@ from ops.testing import Context, State
 from src.charm import KarapaceCharm
 from src.literals import SUBSTRATE, Status
 
+from core.workload import KarapacePaths, WorkloadBase
+
 ACTIONS = str(yaml.safe_load(Path("./actions.yaml").read_text()))
 METADATA = str(yaml.safe_load(Path("./metadata.yaml").read_text()))
 CHARM_KEY = "karapace"
@@ -47,3 +49,31 @@ def test_sans_config(ctx: Context, peer_relation, kafka_relation_tls, tls_relati
                     "karapace-k8s-0.karapace-k8s-endpoints",
                     sock_dns,
                 ]
+
+
+def test_tls_relation_broken_removes_stores(
+    ctx: Context,
+    peer_relation,
+    kafka_relation_tls,
+    tls_relation,
+    patched_exec,
+    tmp_path,
+    monkeypatch,
+):
+    """TLS keys/certs are removed on relation-broken without relying on a shell glob."""
+    conf_dir = tmp_path / "karapace"
+    conf_dir.mkdir()
+    tls_files = [conf_dir / name for name in ("cacert.pem", "cert.pem", "private.key")]
+    other_file = conf_dir / "karapace.config.json"
+    for f in [*tls_files, other_file]:
+        f.write_text("content")
+
+    paths = KarapacePaths()
+    paths.conf_path = str(conf_dir)
+    monkeypatch.setattr(WorkloadBase, "paths", paths)
+
+    state_in = State(relations=[peer_relation, kafka_relation_tls, tls_relation], leader=True)
+    ctx.run(ctx.on.relation_broken(tls_relation), state_in)
+
+    assert not any(f.exists() for f in tls_files)
+    assert other_file.exists()  # non-TLS files are kept

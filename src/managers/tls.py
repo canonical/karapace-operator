@@ -5,9 +5,6 @@
 """Manager for handling Karapace TLS configuration."""
 
 import logging
-import subprocess
-
-from ops.pebble import ExecError
 
 from core.cluster import ClusterContext
 from core.workload import WorkloadBase
@@ -62,15 +59,9 @@ class TLSManager:
             content=self.context.server.certificate, path=self.workload.paths.ssl_certfile
         )
 
-    # FIXME: This method does not work since * is a bash thing.
-    # We should either use `pathops` glob (which works on both substrates) or glob.glob.
     def remove_stores(self) -> None:
         """Cleans up all keys/certs/stores on a unit."""
-        try:
-            self.workload.exec(
-                command="rm -rf *.pem *.key",
-                working_dir=self.workload.paths.conf_path,
-            )
-        except (subprocess.CalledProcessError, ExecError) as e:
-            logger.error(e.stdout)
-            raise e
+        for pattern in ["*.pem", "*.key"]:
+            for path in (self.workload.root / self.workload.paths.conf_path).glob(pattern):
+                logger.debug(f"Removing {path}")
+                path.unlink(missing_ok=True)
